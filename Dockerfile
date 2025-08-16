@@ -7,7 +7,7 @@
 # Please refer to docs/nginx for examples
 
 # Build SPA and PWA
-FROM node:14 as build-stage
+FROM node:14 AS build-stage
 WORKDIR /frontend
 # @quasar/app v1 requires node-ass, which takes 30 minutes to compile libsass in CI for arm64 and armv7
 # So I prebuilt the binaries for arm64 and armv7
