@@ -1,22 +1,15 @@
 // Configuration for your app
 // https://quasar.dev/quasar-cli/quasar-conf-js
 
-module.exports = function (ctx) {
+module.exports = function(ctx) {
   return {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://quasar.dev/quasar-cli/cli-documentation/boot-files
-    boot: [
-      'axios',
-      'slider',
-      'plyr',
-      'socket.io'
-    ],
+    boot: ['axios', 'slider', 'plyr', 'socket.io'],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-css
-    css: [
-      'app.scss'
-    ],
+    css: ['app.scss'],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
@@ -29,7 +22,7 @@ module.exports = function (ctx) {
       // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
 
       'roboto-font', // optional, you are not bound to it
-      'material-icons' // optional, you are not bound to it
+      'material-icons', // optional, you are not bound to it
     ],
 
     // https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-framework
@@ -50,11 +43,7 @@ module.exports = function (ctx) {
       directives: [],
 
       // Quasar plugins
-      plugins: [
-        'LocalStorage',
-        'SessionStorage',
-        'Notify'
-      ]
+      plugins: ['LocalStorage', 'SessionStorage', 'Notify'],
     },
 
     // https://quasar.dev/quasar-cli/cli-documentation/supporting-ie
@@ -74,21 +63,22 @@ module.exports = function (ctx) {
       // extractCSS: false,
 
       // https://quasar.dev/quasar-cli/cli-documentation/handling-webpack
-      extendWebpack (cfg) {
+      extendWebpack(cfg) {
         cfg.module.rules.push({
           enforce: 'pre',
           test: /\.(js|vue)$/,
           loader: 'eslint-loader',
-          exclude: /[\\/]node_modules[\\/]/
-        })
+          exclude: /[\\/]node_modules[\\/]/,
+        });
       },
       modern: true,
       sourceMap: true,
-      devtool: 'source-map'
+      devtool: 'source-map',
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/quasar-conf-js#Property%3A-devServer
     devServer: {
+      // host: '172.20.10.9',
       https: false,
       port: 8080,
       open: true, // opens browser window automatically
@@ -98,10 +88,10 @@ module.exports = function (ctx) {
         '/api': 'http://localhost:8888',
         '/socket.io': {
           target: 'http://localhost:8888',
-          ws: true
+          ws: true,
         },
         '/workbox': 'http://localhost:8888',
-      }
+      },
     },
 
     // animations: 'all', // --- includes all animations
@@ -110,7 +100,7 @@ module.exports = function (ctx) {
 
     // https://quasar.dev/quasar-cli/developing-ssr/configuring-ssr
     ssr: {
-      pwa: false
+      pwa: false,
     },
 
     // https://quasar.dev/quasar-cli/developing-pwa/configuring-pwa
@@ -119,15 +109,9 @@ module.exports = function (ctx) {
       workboxOptions: {
         skipWaiting: true,
         clientsClaim: true,
-        exclude: [
-          /manifest\.json$/,
-          /.*.js.map$/
-        ],
-        navigateFallbackBlacklist: [
-          /^\/api\/.*$/,
-          /\/media\/.*$/
-        ],
-        importWorkboxFrom: 'local'
+        exclude: [/manifest\.json$/, /.*.js.map$/],
+        navigateFallbackBlacklist: [/^\/api\/.*$/, /\/media\/.*$/],
+        importWorkboxFrom: 'local',
       }, // only for GenerateSW
       manifest: {
         name: 'Kikoeru',
@@ -141,41 +125,41 @@ module.exports = function (ctx) {
           {
             src: 'statics/icons/icon-128x128.png',
             sizes: '128x128',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'statics/icons/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'statics/icons/icon-256x256.png',
             sizes: '256x256',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'statics/icons/icon-384x384.png',
             sizes: '384x384',
-            type: 'image/png'
+            type: 'image/png',
           },
           {
             src: 'statics/icons/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
-      }
+            type: 'image/png',
+          },
+        ],
+      },
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/developing-cordova-apps/configuring-cordova
     cordova: {
       // noIosLegacyBuildFlag: true, // uncomment only if you know what you are doing
-      id: 'org.cordova.quasar.kikoeru'
+      id: 'org.cordova.quasar.kikoeru',
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/developing-capacitor-apps/configuring-capacitor
     capacitor: {
-      hideSplashscreen: true
+      hideSplashscreen: true,
     },
 
     // Full list of options: https://quasar.dev/quasar-cli/developing-electron-apps/configuring-electron
@@ -184,13 +168,11 @@ module.exports = function (ctx) {
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
-
         // OS X / Mac App Store
         // appBundleId: '',
         // appCategoryType: '',
         // osxSign: '',
         // protocol: 'myapp://path',
-
         // Windows only
         // win32metadata: { ... }
       },
@@ -198,16 +180,16 @@ module.exports = function (ctx) {
       builder: {
         // https://www.electron.build/configuration/configuration
 
-        appId: 'kikoeru-quasar'
+        appId: 'kikoeru-quasar',
       },
 
       // More info: https://quasar.dev/quasar-cli/developing-electron-apps/node-integration
       nodeIntegration: true,
 
-      extendWebpack (cfg) {
+      extendWebpack(cfg) {
         // do something with Electron main process Webpack cfg
         // chainWebpack also available besides this extendWebpack
-      }
-    }
-  }
-}
+      },
+    },
+  };
+};
