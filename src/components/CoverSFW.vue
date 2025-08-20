@@ -1,6 +1,6 @@
 <template>
   <router-link :to="`/work/${workid}`">
-    <q-img
+    <custom-img
       :src="coverUrl"
       :ratio="4 / 3"
       :img-class="imgClass"
@@ -18,15 +18,20 @@
       <div :v-if="release" class="absolute-bottom-right" style="padding: 5px;">
         {{ release }}
       </div>
-    </q-img>
+    </custom-img>
   </router-link>
 </template>
 
 <script>
 import Utils from '../mixins/Utils';
+import CustomImg from './CustomImg.vue';
 
 export default {
   name: 'CoverSFW',
+
+  components: {
+    CustomImg,
+  },
 
   mixins: [Utils],
 
