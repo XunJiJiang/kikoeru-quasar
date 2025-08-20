@@ -31,6 +31,7 @@ export default {
     return {
       lrcObj: null,
       lrcAvailable: false,
+      isSeeking: false, // 拖动进度条标志
     };
   },
 
@@ -73,6 +74,7 @@ export default {
 
   watch: {
     playing(flag) {
+      if (this.isSeeking) return; // 拖动进度条时不响应
       if (this.player.duration) {
         // 缓冲至可播放状态
         flag ? this.player.play() : this.player.pause();
@@ -298,6 +300,19 @@ export default {
     this.initLrcObj();
     if (this.source) {
       this.loadLrcFile();
+    }
+    // 监听 plyr 的 seeking/seeked 事件
+    const plyr = this.$refs.plyr;
+    if (plyr && plyr.player) {
+      plyr.player.on('seeking', () => {
+        this.isSeeking = true;
+      });
+      plyr.player.on('seeked', () => {
+        // seeked 事件后短暂延迟，避免极快切换
+        setTimeout(() => {
+          this.isSeeking = false;
+        }, 100);
+      });
     }
   },
 };
