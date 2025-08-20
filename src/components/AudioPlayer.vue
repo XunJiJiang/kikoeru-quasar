@@ -14,81 +14,17 @@
           <custom-img contain transition="fade" :src="coverUrl" :ratio="4 / 3" />
           <q-btn
             dense
-            round
             size="md"
-            color="white"
-            text-color="dark"
-            icon="keyboard_arrow_down"
             @click="toggleHide()"
-            class="absolute-top-left q-ma-sm"
+            class="absolute"
+            style="background-color: #fffa; width: 100px; height: 6px; overflow: hidden; left: 50%; top: 10px; transform: translateX(-50%);"
           />
-          <q-btn
-            dense
-            round
-            size="md"
-            color="white"
-            text-color="dark"
-            icon="more_vert"
-            class="absolute-top-right q-ma-sm"
-          >
-            <q-menu anchor="bottom right" self="top right">
-              <q-item clickable v-ripple @click="hideSeekButton = !hideSeekButton">
-                <q-item-section avatar>
-                  <q-icon :name="hideSeekButton ? 'done' : ''" />
-                </q-item-section>
-
-                <q-item-section>
-                  隐藏封面按钮
-                </q-item-section>
-              </q-item>
-
-              <q-item clickable v-ripple @click="swapSeekButton = !swapSeekButton">
-                <q-item-section avatar>
-                  <q-icon :name="swapSeekButton ? 'done' : ''" />
-                </q-item-section>
-                <q-item-section>
-                  交换进度按钮与切换按钮
-                </q-item-section>
-              </q-item>
-
-              <q-item clickable v-ripple @click="openWorkDetail()" v-close-popup>
-                <q-item-section avatar>
-                  <!-- placeholder -->
-                </q-item-section>
-                <q-item-section>
-                  打开作品详情
-                </q-item-section>
-              </q-item>
-            </q-menu>
-          </q-btn>
-          <div class="row absolute q-pl-md q-pr-md col-12 justify-between">
-            <q-btn
-              v-if="!hideSeekButton"
-              round
-              size="lg"
-              color="white"
-              text-color="dark"
-              style="opacity: 0.8"
-              @click="swapSeekButton ? previousTrack() : rewind(true)"
-              :icon="swapSeekButton ? 'skip_previous' : rewindIcon"
-            />
-            <q-btn
-              v-if="!hideSeekButton"
-              round
-              size="lg"
-              color="white"
-              text-color="dark"
-              style="opacity: 0.8"
-              @click="swapSeekButton ? nextTrack() : forward(true)"
-              :icon="swapSeekButton ? 'skip_next' : forwardIcon"
-            />
-          </div>
         </div>
 
         <!-- Place holder for iOS -->
         <div style="height: 5px" v-if="$q.platform.is.ios" />
 
-        <q-item style="height: 55px; padding: 0px 15px;" class="text-center non-selectable">
+        <q-item style="height: 55px; padding: 8px 15px 0 15px;" class="text-center non-selectable">
           <q-item-section>
             <q-item-label lines="2" class="text-bold">{{ currentPlayingFile.title }}</q-item-label>
             <q-item-label caption lines="1">{{ currentPlayingFile.workTitle }}</q-item-label>
@@ -121,6 +57,17 @@
             class="col-auto"
           />
           <q-btn
+            v-if="!hideSeekButton"
+            flat
+            dense
+            size="lg"
+            color="white"
+            text-color="dark"
+            style="opacity: 0.8"
+            @click="swapSeekButton ? previousTrack() : rewind(true)"
+            :icon="swapSeekButton ? 'skip_previous' : rewindIcon"
+          />
+          <q-btn
             flat
             dense
             size="28px"
@@ -128,6 +75,17 @@
             @click="togglePlaying()"
             style="width: 55px"
             class="col-auto"
+          />
+          <q-btn
+            v-if="!hideSeekButton"
+            flat
+            dense
+            size="lg"
+            color="white"
+            text-color="dark"
+            style="opacity: 0.8"
+            @click="swapSeekButton ? nextTrack() : forward(true)"
+            :icon="swapSeekButton ? 'skip_next' : forwardIcon"
           />
           <q-btn
             flat
@@ -157,14 +115,14 @@
           <q-icon name="volume_up" size="sm" class="col-auto" />
         </div>
 
-        <div class="row justify-center" style="height: 25px; gap: 5px">
+        <div class="row justify-center" style="height: 45px; gap: 5px">
           <q-btn
             flat
             dense
             size="md"
             icon="queue_music"
             @click="showCurrentPlayList = !showCurrentPlayList"
-            style="width: 25px; width: 40px"
+            style="height: 35px; width: 40px"
             class="col-auto"
           />
           <q-btn
@@ -173,7 +131,7 @@
             size="md"
             :icon="playModeIcon"
             @click="changePlayMode()"
-            style="width: 25px; width: 40px"
+            style="height: 35px; width: 40px"
             class="col-auto"
           />
           <q-btn
@@ -182,9 +140,48 @@
             size="md"
             icon="picture_in_picture_alt"
             @click="switchPictureInPicture()"
-            style="width: 25px; width: 40px"
+            style="height: 35px; width: 40px"
             class="col-auto"
           />
+          <q-btn
+            flat
+            dense
+            size="md"
+            color="white"
+            style="height: 35px; width: 40px"
+            text-color="dark"
+            icon="more_vert"
+          >
+            <q-menu anchor="bottom right" self="top right">
+              <q-item clickable v-ripple @click="hideSeekButton = !hideSeekButton">
+                <q-item-section avatar>
+                  <q-icon :name="hideSeekButton ? 'done' : ''" />
+                </q-item-section>
+
+                <q-item-section>
+                  隐藏封面按钮
+                </q-item-section>
+              </q-item>
+
+              <q-item clickable v-ripple @click="swapSeekButton = !swapSeekButton">
+                <q-item-section avatar>
+                  <q-icon :name="swapSeekButton ? 'done' : ''" />
+                </q-item-section>
+                <q-item-section>
+                  交换进度按钮与切换按钮
+                </q-item-section>
+              </q-item>
+
+              <q-item clickable v-ripple @click="openWorkDetail()" v-close-popup>
+                <q-item-section avatar>
+                  <!-- placeholder -->
+                </q-item-section>
+                <q-item-section>
+                  打开作品详情
+                </q-item-section>
+              </q-item>
+            </q-menu>
+          </q-btn>
         </div>
       </q-card>
     </q-slide-transition>
