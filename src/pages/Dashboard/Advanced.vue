@@ -14,9 +14,9 @@
 
           <q-item-section avatar>
             <div class="q-gutter-sm">
-              <q-radio dense v-model="rewindSeekTime" val=5 label="5 秒" />
-              <q-radio dense v-model="rewindSeekTime" val=10 label="10 秒" />
-              <q-radio dense v-model="rewindSeekTime" val=30 label="30 秒" />
+              <q-radio dense v-model="rewindSeekTime" val="5" label="5 秒" />
+              <q-radio dense v-model="rewindSeekTime" val="10" label="10 秒" />
+              <q-radio dense v-model="rewindSeekTime" val="30" label="30 秒" />
             </div>
           </q-item-section>
         </q-item>
@@ -114,12 +114,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-input
-              v-model.number="config.retry"
-              type="number"
-              input-class="text-right"
-              style="max-width: 100px;"
-            />
+            <q-input v-model.number="config.retry" type="number" input-class="text-right" style="max-width: 100px;" />
           </q-item-section>
         </q-item>
 
@@ -146,11 +141,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-input
-              v-model="config.httpProxyHost"
-              input-class="text-right"
-              style="max-width: 100px;"
-            />
+            <q-input v-model="config.httpProxyHost" input-class="text-right" style="max-width: 100px;" />
           </q-item-section>
         </q-item>
 
@@ -231,7 +222,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-toggle v-model="config.enableGzip" dense/>
+            <q-toggle v-model="config.enableGzip" dense />
           </q-item-section>
         </q-item>
 
@@ -258,7 +249,7 @@
           </q-item-section>
 
           <q-item-section avatar>
-            <q-toggle v-model="config.blockRemoteConnection" dense/>
+            <q-toggle v-model="config.blockRemoteConnection" dense />
           </q-item-section>
         </q-item>
 
@@ -346,7 +337,9 @@
         <q-item>
           <q-item-section>
             <q-item-label>数据库使用默认路径</q-item-label>
-            <q-item-label caption>使用程序所在位置下的sqlite文件夹，并忽略databaseFolderDir设置（如无必要请勿修改，更改此设置需要重启程序）</q-item-label>
+            <q-item-label caption
+              >使用程序所在位置下的sqlite文件夹，并忽略databaseFolderDir设置（如无必要请勿修改，更改此设置需要重启程序）</q-item-label
+            >
           </q-item-section>
 
           <q-item-section avatar>
@@ -374,70 +367,72 @@
 </template>
 
 <script>
-import NotifyMixin from '../../mixins/Notification.js'
+import NotifyMixin from '../../mixins/Notification.js';
 
 export default {
   name: 'Advanced',
 
   mixins: [NotifyMixin],
 
-  data () {
+  data() {
     return {
       config: {},
       loading: false,
       rewindSeekTime: '5',
-      forwardSeekTime: '30'
-    }
+      forwardSeekTime: '30',
+    };
   },
 
   methods: {
-    requestConfig () {
-      this.$axios.get('/api/config/admin')
-        .then((response) => {
+    requestConfig() {
+      this.$axios
+        .get('/api/config/admin')
+        .then(response => {
           this.config = response.data.config;
           // Integer => String
-          this.rewindSeekTime = this.config.rewindSeekTime.toString()
-          this.forwardSeekTime = this.config.forwardSeekTime.toString()
+          this.rewindSeekTime = this.config.rewindSeekTime.toString();
+          this.forwardSeekTime = this.config.forwardSeekTime.toString();
         })
-        .catch((error) => {
+        .catch(error => {
           if (error.response) {
             // 请求已发出，但服务器响应的状态码不在 2xx 范围内
             if (error.response.status !== 401) {
-              this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
+              this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`);
             }
           } else {
-            this.showErrNotif(error.message || error)
+            this.showErrNotif(error.message || error);
           }
-        })
+        });
     },
 
-    onSubmit () {
+    onSubmit() {
       // String => Integer
-      this.config.rewindSeekTime = parseInt(this.rewindSeekTime)
-      this.config.forwardSeekTime = parseInt(this.forwardSeekTime)
+      this.config.rewindSeekTime = parseInt(this.rewindSeekTime);
+      this.config.forwardSeekTime = parseInt(this.forwardSeekTime);
 
-      this.loading = true
-      this.$axios.put('/api/config/admin', {
-        config: this.config
-      })
-        .then((response) => {
-          this.loading = false
-          this.showSuccNotif(response.data.message)
+      this.loading = true;
+      this.$axios
+        .put('/api/config/admin', {
+          config: this.config,
         })
-        .catch((error) => {
-          this.loading = false
+        .then(response => {
+          this.loading = false;
+          this.showSuccNotif(response.data.message);
+        })
+        .catch(error => {
+          this.loading = false;
           if (error.response) {
             // 请求已发出，但服务器响应的状态码不在 2xx 范围内
-            this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`)
+            this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`);
           } else {
-            this.showErrNotif(error.message || error)
+            this.showErrNotif(error.message || error);
           }
-        })
+        });
     },
   },
 
-  created () {
-    this.requestConfig()
-  }
-}
+  created() {
+    this.requestConfig();
+  },
+};
 </script>

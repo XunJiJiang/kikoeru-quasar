@@ -1,31 +1,26 @@
 <template>
-    <q-dialog v-bind:value="value" v-on:input="$emit('input')" persistent>
-      <q-card>
-        <div class="q-pa-sm">
-          <q-time
-            v-model="time"
-            now-btn
-            :dark="sleepMode"
-          />
-        </div>
+  <q-dialog v-bind:value="value" v-on:input="$emit('input')" persistent>
+    <q-card>
+      <div class="q-pa-sm">
+        <q-time v-model="time" now-btn :dark="sleepMode" />
+      </div>
 
-        <div class="row justify-between">
-          <q-card-actions>
-            <q-btn flat label="取消定时" color="primary" @click="clearSleepTimer" :disable="!sleepMode" v-close-popup />
-          </q-card-actions>
+      <div class="row justify-between">
+        <q-card-actions>
+          <q-btn flat label="取消定时" color="primary" @click="clearSleepTimer" :disable="!sleepMode" v-close-popup />
+        </q-card-actions>
 
-          <q-card-actions align="right">
-            <q-btn flat label="取消" color="primary" v-close-popup />
-            <q-btn flat label="确定" color="primary" @click="setSleepTimer" v-close-popup />
-          </q-card-actions>
-        </div>
-
-      </q-card>
-    </q-dialog>
-</template> 
+        <q-card-actions align="right">
+          <q-btn flat label="取消" color="primary" v-close-popup />
+          <q-btn flat label="确定" color="primary" @click="setSleepTimer" v-close-popup />
+        </q-card-actions>
+      </div>
+    </q-card>
+  </q-dialog>
+</template>
 
 <script>
-import { mapState, mapMutations } from 'vuex'
+import { mapState, mapMutations } from 'vuex';
 
 export default {
   name: 'SleepMode',
@@ -36,15 +31,12 @@ export default {
   data() {
     return {
       // for q-time component only
-      time: '00:00'
-    }
+      time: '00:00',
+    };
   },
 
   computed: {
-    ...mapState('AudioPlayer', [
-      'sleepTime',
-      'sleepMode'
-    ])
+    ...mapState('AudioPlayer', ['sleepTime', 'sleepMode']),
   },
 
   mounted() {
@@ -63,19 +55,25 @@ export default {
       if (visible) {
         if (!this.sleepMode) {
           const currentTime = new Date();
-          this.time = currentTime.getHours().toString().padStart(2, '0') + ':' + currentTime.getMinutes().toString().padStart(2, '0');          
+          this.time =
+            currentTime
+              .getHours()
+              .toString()
+              .padStart(2, '0') +
+            ':' +
+            currentTime
+              .getMinutes()
+              .toString()
+              .padStart(2, '0');
         } else {
           this.time = this.sleepTime;
         }
       }
-    }
+    },
   },
 
   methods: {
-    ...mapMutations('AudioPlayer', [
-      'SET_SLEEP_TIMER',
-      'CLEAR_SLEEP_MODE'
-    ]),
+    ...mapMutations('AudioPlayer', ['SET_SLEEP_TIMER', 'CLEAR_SLEEP_MODE']),
 
     setSleepTimer() {
       this.SET_SLEEP_TIMER(this.time);
@@ -100,14 +98,14 @@ export default {
       this.showSuccNotif('已关闭睡眠模式');
     },
 
-    showSuccNotif (message) {
+    showSuccNotif(message) {
       this.$q.notify({
         message,
         color: 'primary',
         icon: 'bedtime',
-        timeout: 5000
-      })
+        timeout: 5000,
+      });
     },
-  }
-}
+  },
+};
 </script>
