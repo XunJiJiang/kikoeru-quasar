@@ -35,10 +35,6 @@ export default {
       type: String,
       default: '',
     },
-    style: {
-      type: String,
-      default: '',
-    },
   },
 
   data() {
@@ -47,9 +43,8 @@ export default {
 
   computed: {
     computedStyle() {
-      const baseStyle = this.style ? this.style : '';
       const ratioStyle = this.ratio ? `` : '';
-      return `${baseStyle} ${ratioStyle}`;
+      return `${ratioStyle}`;
     },
 
     imgStyle() {
