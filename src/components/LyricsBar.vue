@@ -38,7 +38,7 @@ export default {
   name: 'LyricsBar',
 
   computed: {
-    ...mapState('AudioPlayer', ['currentLyric', 'hasPictureInPicture']),
+    ...mapState('AudioPlayer', ['playing', 'currentLyric', 'hasPictureInPicture']),
 
     draggable() {
       return document.getElementById('draggable');
@@ -91,32 +91,74 @@ export default {
       }
     },
 
-    currentLyric(newVal) {
-      console.log('currentLyric changed:', newVal);
+    playing(newVal) {
       if (this.pipWindow && this.pipWindow.document) {
         const pipDoc = this.pipWindow.document;
-        pipDoc.body.innerHTML = `
-          <div id="lyricsBar" style="text-align:center;font-size:1.2em;color:#fff;background-color:#000;">
-            <span id="lyric">${newVal}</span>
-          </div>
-        `;
+        const btn = pipDoc.querySelector('#pip-play-toggle');
+        if (btn) {
+          btn.innerHTML = newVal
+            ? `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect x="3" y="3" width="5" height="14" rx="1" fill="#fff"/>
+                <rect x="12" y="3" width="5" height="14" rx="1" fill="#fff"/>
+              </svg>`
+            : `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <polygon points="4,3 17,10 4,17" fill="#fff"/>
+              </svg>`;
+        }
+      }
+    },
+    currentLyric(newVal) {
+      if (this.pipWindow && this.pipWindow.document) {
+        const pipDoc = this.pipWindow.document;
+        const lyric = pipDoc.querySelector('#lyric-text');
+        if (lyric) {
+          lyric.textContent = newVal;
+        }
       }
     },
     pipWindow(newVal) {
       if (newVal && newVal.document) {
         const pipDoc = newVal.document;
-        pipDoc.body.style.backgroundColor = '#000';
+        pipDoc.body.style.cssText = 'background-color:#000;margin:0;padding:0;';
         pipDoc.body.innerHTML = `
-          <div id="lyricsBar" style="text-align:center;font-size:1.2em;color:#fff;background-color:#000;">
-            <span id="lyric">${this.currentLyric}</span>
-          </div>
-        `;
+            <div id="lyricsBar" style="text-align:center;font-size:1em;color:#fffd;background-color:#000;">
+              <span id="lyric-text">${this.currentLyric}</span>
+              <button id="pip-play-toggle" style="position:absolute;bottom:3px;left:3px;padding:4px 12px;font-size:1em;background:none;border:none;outline:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">
+              ${
+                this.playing
+                  ? `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <rect x="3" y="3" width="5" height="14" rx="1" fill="#fff"/>
+                  <rect x="12" y="3" width="5" height="14" rx="1" fill="#fff"/>
+                  </svg>`
+                  : `<svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <polygon points="4,3 17,10 4,17" fill="#fff"/>
+                  </svg>`
+              }
+              </button>
+            </div>
+          `;
+        this.attachPipPlayToggleHandler();
       }
     },
   },
 
   methods: {
+    /**
+     * 在画中画窗口中添加播放/暂停按钮的事件监听
+     */
+    attachPipPlayToggleHandler() {
+      if (!this.pipWindow || !this.pipWindow.document) return;
+      const pipDoc = this.pipWindow.document;
+      const btn = pipDoc.getElementById('pip-play-toggle');
+      if (btn) {
+        btn.onclick = () => {
+          this.togglePlaying();
+        };
+      }
+    },
+
     ...mapMutations('AudioPlayer', {
+      togglePlaying: 'TOGGLE_PLAYING',
       switchPictureInPicture: 'TOGGLE_PICTURE_IN_PICTURE',
     }),
 
