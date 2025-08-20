@@ -2,13 +2,15 @@
   <div class="q-ma-md " style="">
     <q-breadcrumbs gutter="xs" v-if="path.length">
       <q-breadcrumbs-el>
-        <q-btn no-caps flat dense size="md" icon="folder" style="height: 30px;" @click="path = []">ROOT</q-btn>
+        <q-btn no-caps flat dense size="md" style="height: 30px;" @click="path = []">ROOT</q-btn>
       </q-breadcrumbs-el>
 
       <q-breadcrumbs-el v-for="(folderName, index) in path" :key="index" class="cursor-pointer">
-        <q-btn no-caps flat dense size="md" icon="folder" style="height: 30px;" @click="onClickBreadcrumb(index)">{{
-          folderName
-        }}</q-btn>
+        <q-btn no-caps flat dense size="md" style="height: 30px;" @click="onClickBreadcrumb(index)"
+          ><span style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{
+            folderName
+          }}</span></q-btn
+        >
       </q-breadcrumbs-el>
     </q-breadcrumbs>
 
