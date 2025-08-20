@@ -52,8 +52,6 @@
             touch-position
             context-menu
             auto-close
-            transition-show="jump-down"
-            transition-hide="jump-up"
           >
             <q-list separator>
               <q-item clickable @click="addToQueue(item)" v-if="item.type === 'audio'">
@@ -102,7 +100,6 @@ export default {
 
   computed: {
     fatherFolder() {
-      console.log(this.tree);
       let fatherFolder = this.tree.concat();
       this.path.forEach(folderName => {
         fatherFolder = fatherFolder.find(item => item.type === 'folder' && item.title === folderName).children;

@@ -19,6 +19,7 @@
 
 <script>
 import Lyric from 'lrc-file-parser';
+import { WebVTT } from 'vtt.js';
 import { mapState, mapGetters, mapMutations } from 'vuex';
 import NotifyMixin from '../mixins/Notification.js';
 
@@ -29,7 +30,9 @@ export default {
 
   data() {
     return {
-      lrcObj: null,
+      lrcObj: null, // LRC对象
+      vttCues: [], // VTT cue数组
+      subtitleType: null, // 'lrc' | 'vtt' | null
       lrcAvailable: false,
       isSeeking: false, // 拖动进度条标志
     };
@@ -191,6 +194,18 @@ export default {
           this.$q.sessionStorage.set('sleepMode', false);
         }
       }
+
+      if (this.lrcAvailable && this.subtitleType === 'vtt' && this.vttCues.length > 0) {
+        const t = this.player.currentTime;
+        const cue = this.vttCues.find(c => t >= c.start && t <= c.end);
+        if (cue) {
+          console.log('VTT同步: 当前时间', t, '显示字幕', cue.text);
+          this.SET_CURRENT_LYRIC(cue.text);
+        } else {
+          console.log('VTT同步: 当前时间', t, '无字幕');
+          this.SET_CURRENT_LYRIC('');
+        }
+      }
     },
 
     onEnded() {
@@ -239,19 +254,24 @@ export default {
     },
 
     playLrc(playStatus) {
-      if (this.lrcAvailable) {
+      if (!this.lrcAvailable) return;
+      if (this.subtitleType === 'lrc') {
         if (playStatus) {
           this.lrcObj.play(this.player.currentTime * 1000);
         } else {
           this.lrcObj.pause();
         }
+      } else if (this.subtitleType === 'vtt') {
+        // VTT不需要play/pause，直接在timeupdate里处理
       }
     },
 
     initLrcObj() {
       this.lrcObj = new Lyric({
         onPlay: (line, text) => {
-          this.SET_CURRENT_LYRIC(text);
+          if (this.subtitleType === 'lrc') {
+            this.SET_CURRENT_LYRIC(text);
+          }
         },
       });
     },
@@ -265,25 +285,44 @@ export default {
         .get(url)
         .then(response => {
           if (response.data.result) {
-            // 有lrc歌词文件
             this.lrcAvailable = true;
-            console.log('读入歌词');
+            this.subtitleType = null;
             const lrcUrl = `/api/media/stream/${response.data.hash}?token=${token}`;
             this.$axios.get(lrcUrl).then(response => {
-              console.log('歌词读入成功');
-              this.lrcObj.setLyric(response.data);
-              this.lrcObj.play(this.player.currentTime * 1000);
+              const text = response.data;
+              // 判断格式
+              console.log(text.slice(0, 100));
+              if (/^\s*WEBVTT/i.test(text) || /\d{2}:\d{2}:\d{2}\.\d{3} -->/.test(text)) {
+                // VTT格式
+                console.log('检测到VTT格式歌词');
+                this.subtitleType = 'vtt';
+                this.parseVtt(text);
+              } else if (/\[\d{1,2}:\d{2}(?:\.\d{1,2})?\]/.test(text)) {
+                // LRC格式
+                console.log('检测到LRC格式歌词');
+                this.subtitleType = 'lrc';
+                this.lrcObj.setLyric(text);
+                this.lrcObj.play(this.player.currentTime * 1000);
+              } else {
+                // 未知格式
+                this.subtitleType = null;
+                this.lrcAvailable = false;
+                this.lrcObj.setLyric('');
+                this.SET_CURRENT_LYRIC('');
+                this.vttCues = [];
+              }
             });
           } else {
             // 无歌词文件
             this.lrcAvailable = false;
+            this.subtitleType = null;
             this.lrcObj.setLyric('');
             this.SET_CURRENT_LYRIC('');
+            this.vttCues = [];
           }
         })
         .catch(error => {
           if (error.response) {
-            // 请求已发出，但服务器响应的状态码不在 2xx 范围内
             if (error.response.status !== 401) {
               this.showErrNotif(error.response.data.error || `${error.response.status} ${error.response.statusText}`);
             }
@@ -291,6 +330,33 @@ export default {
             this.showErrNotif(error.message || error);
           }
         });
+    },
+
+    parseVtt(text) {
+      // 解析VTT文本，填充vttCues
+      this.vttCues = [];
+      try {
+        const parser = new WebVTT.Parser(window);
+        parser.oncue = cue => {
+          this.vttCues.push({
+            start: cue.startTime,
+            end: cue.endTime,
+            text: cue.text,
+          });
+        };
+        parser.onparsingerror = e => {
+          console.error('VTT解析错误', e);
+        };
+        // 直接赋值buffer并parse()
+        parser.buffer = text;
+        parser.parse();
+        parser.flush();
+      } catch (e) {
+        this.vttCues = [];
+        this.lrcAvailable = false;
+        this.SET_CURRENT_LYRIC('');
+        console.error('VTT解析异常', e);
+      }
     },
   },
 
