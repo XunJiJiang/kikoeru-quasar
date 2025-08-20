@@ -1,5 +1,6 @@
 <template>
   <q-card
+    v-if="!hideLyrics"
     id="draggable"
     @mousedown="onCursorDown"
     @mouseup="onCursorUp"
@@ -15,7 +16,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapMutations } from 'vuex';
 
 const onCursorMove = that => ev => {
   if (!that.beTouched) {
@@ -37,7 +38,7 @@ export default {
   name: 'LyricsBar',
 
   computed: {
-    ...mapState('AudioPlayer', ['currentLyric']),
+    ...mapState('AudioPlayer', ['currentLyric', 'hasPictureInPicture']),
 
     draggable() {
       return document.getElementById('draggable');
@@ -51,10 +52,74 @@ export default {
       // 鼠标按下时的位置
       startX: 0,
       startY: 0,
+
+      // 是否隐藏内部歌词
+      hideLyrics: false,
+
+      // 画中画窗口 document
+      pipWindow: null,
     };
   },
 
+  watch: {
+    /** 监视 hasPictureInPicture */
+    async hasPictureInPicture(newVal) {
+      if (!window.documentPictureInPicture) {
+        return;
+      }
+      if (newVal) {
+        this.hideLyrics = true; // 隐藏歌词
+        const pipWindow = await window.documentPictureInPicture.requestWindow({
+          width: 400,
+          height: 100,
+        });
+
+        this.pipWindow = pipWindow;
+
+        pipWindow.addEventListener('pagehide', () => {
+          this.switchPictureInPicture();
+        });
+
+        window.documentPictureInPicture.addEventListener('enter', () => {
+          this.pipReady = true;
+        });
+      } else {
+        this.hideLyrics = false; // 显示歌词
+        if (window.documentPictureInPicture.window) {
+          window.documentPictureInPicture.window.close();
+        }
+      }
+    },
+
+    currentLyric(newVal) {
+      console.log('currentLyric changed:', newVal);
+      if (this.pipWindow && this.pipWindow.document) {
+        const pipDoc = this.pipWindow.document;
+        pipDoc.body.innerHTML = `
+          <div id="lyricsBar" style="text-align:center;font-size:1.2em;color:#fff;background-color:#000;">
+            <span id="lyric">${newVal}</span>
+          </div>
+        `;
+      }
+    },
+    pipWindow(newVal) {
+      if (newVal && newVal.document) {
+        const pipDoc = newVal.document;
+        pipDoc.body.style.backgroundColor = '#000';
+        pipDoc.body.innerHTML = `
+          <div id="lyricsBar" style="text-align:center;font-size:1.2em;color:#fff;background-color:#000;">
+            <span id="lyric">${this.currentLyric}</span>
+          </div>
+        `;
+      }
+    },
+  },
+
   methods: {
+    ...mapMutations('AudioPlayer', {
+      switchPictureInPicture: 'TOGGLE_PICTURE_IN_PICTURE',
+    }),
+
     /**
      * @param {TouchEvent|MouseEvent} ev
      */

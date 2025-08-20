@@ -85,13 +85,6 @@
           </div>
         </div>
 
-        <!-- 进度条控件 -->
-        <div class="row items-center q-mx-sm q-my-sm" style="height: 40px">
-          <div class="col-auto">{{ formatSeconds(currentTime) }}</div>
-          <AudioElement class="col" />
-          <div class="col-auto">{{ formatSeconds(duration) }}</div>
-        </div>
-
         <!-- Place holder for iOS -->
         <div style="height: 5px" v-if="$q.platform.is.ios" />
 
@@ -105,24 +98,26 @@
         <!-- Place holder for iOS -->
         <div style="height: 10px" v-if="$q.platform.is.ios" />
 
+        <!-- 进度条控件 -->
+        <div class="column items-center q-mx-sm q-my-sm" style="height: 45px">
+          <div style="width: 100%;">
+            <AudioElement class="col" />
+          </div>
+          <div class="row justify-between q-mt-xs" style="width: 100%;">
+            <div class="col-auto">{{ formatSeconds(currentTime) }}</div>
+            <div class="col-auto">{{ formatSeconds(duration) }}</div>
+          </div>
+        </div>
+
         <!-- 播放按钮控件 -->
-        <div class="row justify-around" style="height: 65px">
-          <q-btn
-            flat
-            dense
-            size="md"
-            icon="queue_music"
-            @click="showCurrentPlayList = !showCurrentPlayList"
-            style="width: 55px"
-            class="col-auto"
-          />
+        <div class="row justify-around" style="height: 55px">
           <q-btn
             flat
             dense
             size="lg"
             :icon="swapSeekButton ? rewindIcon : 'skip_previous'"
             @click="swapSeekButton ? rewind(true) : previousTrack()"
-            style="width: 55px"
+            style="width: 45px"
             class="col-auto"
           />
           <q-btn
@@ -131,7 +126,7 @@
             size="28px"
             :icon="playingIcon"
             @click="togglePlaying()"
-            style="width: 65px"
+            style="width: 55px"
             class="col-auto"
           />
           <q-btn
@@ -140,16 +135,7 @@
             size="lg"
             :icon="swapSeekButton ? forwardIcon : 'skip_next'"
             @click="swapSeekButton ? forward(true) : nextTrack()"
-            style="width: 55px"
-            class="col-auto"
-          />
-          <q-btn
-            flat
-            dense
-            size="md"
-            :icon="playModeIcon"
-            @click="changePlayMode()"
-            style="width: 55px"
+            style="width: 45px"
             class="col-auto"
           />
         </div>
@@ -169,6 +155,36 @@
             class="col"
           />
           <q-icon name="volume_up" size="sm" class="col-auto" />
+        </div>
+
+        <div class="row justify-center" style="height: 25px; gap: 5px">
+          <q-btn
+            flat
+            dense
+            size="md"
+            icon="queue_music"
+            @click="showCurrentPlayList = !showCurrentPlayList"
+            style="width: 25px; width: 40px"
+            class="col-auto"
+          />
+          <q-btn
+            flat
+            dense
+            size="md"
+            :icon="playModeIcon"
+            @click="changePlayMode()"
+            style="width: 25px; width: 40px"
+            class="col-auto"
+          />
+          <q-btn
+            flat
+            dense
+            size="md"
+            icon="picture_in_picture_alt"
+            @click="switchPictureInPicture()"
+            style="width: 25px; width: 40px"
+            class="col-auto"
+          />
         </div>
       </q-card>
     </q-slide-transition>
@@ -395,6 +411,7 @@ export default {
       'playMode',
       'rewindSeekTime',
       'forwardSeekTime',
+      'hasPictureInPicture',
     ]),
 
     ...mapGetters('AudioPlayer', ['currentPlayingFile']),
@@ -410,6 +427,7 @@ export default {
       setVolume: 'SET_VOLUME',
       rewind: 'SET_REWIND_SEEK_MODE',
       forward: 'SET_FORWARD_SEEK_MODE',
+      switchPictureInPicture: 'TOGGLE_PICTURE_IN_PICTURE',
     }),
     ...mapMutations('AudioPlayer', ['SET_TRACK', 'SET_QUEUE', 'REMOVE_FROM_QUEUE', 'EMPTY_QUEUE', 'SET_VOLUME']),
 
@@ -494,7 +512,7 @@ export default {
   // 宽度 < $breakpoint-xs-max (599px)
   @media (max-width: $breakpoint-xs-max) {
     width: 100%;
-    height: calc(100% - 230px);
+    height: calc(100% - 280px);
   }
 }
 
