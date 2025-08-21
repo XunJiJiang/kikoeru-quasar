@@ -37,7 +37,7 @@
         <!-- 进度条控件 -->
         <div class="column items-center q-mx-sm q-my-sm" style="height: 45px">
           <div style="width: 100%;">
-            <AudioElement class="col" />
+            <AudioElement ref="audio-element" class="col" />
           </div>
           <div class="row justify-between q-mt-xs" style="width: 100%;">
             <div class="col-auto">{{ formatSeconds(currentTime) }}</div>
@@ -139,10 +139,60 @@
             dense
             size="md"
             icon="picture_in_picture_alt"
+            :disabled="!currentSubtitlesHash"
             @click="switchPictureInPicture()"
             style="height: 35px; width: 40px"
             class="col-auto"
           />
+          <q-btn
+            flat
+            dense
+            size="md"
+            icon="subtitles"
+            @click="visibleSubtitlesSelectBar = !visibleSubtitlesSelectBar"
+            style="height: 35px; width: 40px"
+            class="col-auto"
+          />
+
+          <q-dialog v-model="visibleSubtitlesSelectBar">
+            <q-layout container>
+              <q-header class="bg-white">
+                <q-bar>
+                  <q-select
+                    dense
+                    v-model="currentSubtitlesItem"
+                    :options="currentAllSubtitlesFiles"
+                    option-label="title"
+                    option-value="hash"
+                    option-dense
+                  />
+                  <q-space />
+                  <q-btn dense flat icon="close" v-close-popup>
+                    <q-tooltip>Close</q-tooltip>
+                  </q-btn>
+                </q-bar>
+              </q-header>
+              <q-footer>
+                <div>Footer</div>
+              </q-footer>
+              <q-card style="margin-top: 30px;">
+                <q-list>
+                  <q-item
+                    v-for="(item, index) in currentSubtitlesTimeline"
+                    :key="index"
+                    clickable
+                    @click="setCurrentTimeMs(item.time)"
+                  >
+                    <q-item-section>
+                      <q-item-label caption>{{ formatSeconds(Math.floor(item.time / 1000)) }}</q-item-label>
+                      <q-item-label>{{ item.text }}</q-item-label></q-item-section
+                    >
+                  </q-item>
+                </q-list>
+              </q-card>
+            </q-layout>
+          </q-dialog>
+
           <q-btn
             flat
             dense
@@ -290,6 +340,10 @@ export default {
       queueCopy: [],
       hideSeekButton: false,
       swapSeekButton: false,
+
+      visibleSubtitlesSelectBar: false, // 字幕选择窗口显示状态
+      currentAllSubtitlesFiles: [], // 当前所有字幕文件
+      currentSubtitlesItem: null, // 当前选中的字幕文件
     };
   },
 
@@ -309,6 +363,25 @@ export default {
       if (this.queueCopy.length === 0) {
         this.showCurrentPlayList = false;
       }
+
+      // 切换播放列表时, 获取当前所有字幕文件
+      if (this.queueCopy.length !== 0) {
+        const token = this.$q.localStorage.getItem('jwt-token') || '';
+        const fileHash = this.queue[this.queueIndex].hash;
+        this.lrcAvailable = true;
+        this.subtitleType = null;
+        const lrcUrl = `/api/media/find-all-lrc/${fileHash}?token=${token}`;
+        this.$axios
+          .get(lrcUrl)
+          .then(response => {
+            this.currentAllSubtitlesFiles = response.data.subtitlesItems;
+          })
+          .catch(() => {
+            this.currentAllSubtitlesFiles = [];
+          });
+      } else {
+        this.currentAllSubtitlesFiles = [];
+      }
     },
 
     showCurrentPlayList(flag) {
@@ -324,6 +397,20 @@ export default {
 
     swapSeekButton(option) {
       this.$q.localStorage.set('swapSeekButton', option);
+    },
+
+    currentSubtitlesHash(hash) {
+      if (hash) {
+        this.currentSubtitlesItem = this.currentAllSubtitlesFiles.find(item => item.hash === hash);
+      } else {
+        this.currentSubtitlesItem = null;
+      }
+    },
+
+    currentSubtitlesItem(item) {
+      if (item) {
+        this.setCurrentSubtitlesHash(item.hash);
+      }
     },
   },
 
@@ -409,6 +496,8 @@ export default {
       'rewindSeekTime',
       'forwardSeekTime',
       'hasPictureInPicture',
+      'currentSubtitlesHash',
+      'currentSubtitlesTimeline',
     ]),
 
     ...mapGetters('AudioPlayer', ['currentPlayingFile']),
@@ -425,6 +514,7 @@ export default {
       rewind: 'SET_REWIND_SEEK_MODE',
       forward: 'SET_FORWARD_SEEK_MODE',
       switchPictureInPicture: 'TOGGLE_PICTURE_IN_PICTURE',
+      setCurrentSubtitlesHash: 'SET_CURRENT_SUBTITLE_HASH',
     }),
     ...mapMutations('AudioPlayer', ['SET_TRACK', 'SET_QUEUE', 'REMOVE_FROM_QUEUE', 'EMPTY_QUEUE', 'SET_VOLUME']),
 
@@ -485,6 +575,14 @@ export default {
       }
       if (this.$q.screen.lt.sm) {
         this.toggleHide();
+      }
+    },
+
+    /** 切换当前时间线 */
+    setCurrentTimeMs(ms) {
+      if (this.$refs['audio-element']) {
+        this.$refs['audio-element'].setCurrentTimeMs(ms);
+        this.visibleSubtitlesSelectBar = false;
       }
     },
   },

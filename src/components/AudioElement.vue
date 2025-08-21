@@ -70,6 +70,8 @@ export default {
       'forwardSeekTime',
       'rewindSeekMode',
       'forwardSeekMode',
+      'currentSubtitlesFile',
+      'currentSubtitlesHash',
     ]),
 
     ...mapGetters('AudioPlayer', ['currentPlayingFile']),
@@ -90,7 +92,7 @@ export default {
       if (url) {
         // 加载新音频/视频文件
         this.player.media.load();
-        this.loadLrcFile();
+        this.findLoadLrcFile();
       }
     },
 
@@ -118,6 +120,12 @@ export default {
       if (forward) {
         this.player.forward(this.forwardSeekTime);
         this.SET_FORWARD_SEEK_MODE(false);
+      }
+    },
+    currentSubtitlesHash(hash, oldHash) {
+      if (hash && hash !== oldHash) {
+        console.log('当前字幕文件哈希:', hash);
+        this.loadLrcFile(hash);
       }
     },
   },
@@ -159,6 +167,9 @@ export default {
       'CLEAR_SLEEP_MODE',
       'SET_REWIND_SEEK_MODE',
       'SET_FORWARD_SEEK_MODE',
+      'SET_CURRENT_SUBTITLE_FILE',
+      'SET_CURRENT_SUBTITLE_HASH',
+      'SET_CURRENT_SUBTITLE_TIMELINE',
     ]),
 
     onCanplay() {
@@ -199,10 +210,8 @@ export default {
         const t = this.player.currentTime;
         const cue = this.vttCues.find(c => t >= c.start && t <= c.end);
         if (cue) {
-          console.log('VTT同步: 当前时间', t, '显示字幕', cue.text);
           this.SET_CURRENT_LYRIC(cue.text);
         } else {
-          console.log('VTT同步: 当前时间', t, '无字幕');
           this.SET_CURRENT_LYRIC('');
         }
       }
@@ -276,7 +285,55 @@ export default {
       });
     },
 
-    loadLrcFile() {
+    /** 加载指定 hash 的字幕文件 */
+    loadLrcFile(hash) {
+      const token = this.$q.localStorage.getItem('jwt-token') || '';
+      this.lrcAvailable = true;
+      this.subtitleType = null;
+      const lrcUrl = `/api/media/stream/${hash}?token=${token}`;
+      this.$axios.get(lrcUrl).then(response => {
+        const text = response.data;
+        // 判断格式
+        console.log(text.slice(0, 100));
+        if (/^\s*WEBVTT/i.test(text) || /\d{2}:\d{2}:\d{2}\.\d{3} -->/.test(text)) {
+          // VTT格式
+          console.log('检测到VTT格式歌词');
+          this.subtitleType = 'vtt';
+          this.SET_CURRENT_SUBTITLE_FILE(text);
+          this.SET_CURRENT_SUBTITLE_HASH(hash);
+          this.parseVtt(text);
+          this.SET_CURRENT_SUBTITLE_TIMELINE(
+            this.vttCues.map(({ start, text }) => ({
+              time: start * 1000,
+              text,
+            }))
+          );
+          console.log('this.vttCues', this.vttCues);
+        } else if (/\[\d{1,2}:\d{2}(?:\.\d{1,2})?\]/.test(text)) {
+          // LRC格式
+          console.log('检测到LRC格式歌词');
+          this.subtitleType = 'lrc';
+          this.SET_CURRENT_SUBTITLE_FILE(text);
+          this.SET_CURRENT_SUBTITLE_HASH(hash);
+          this.lrcObj.setLyric(text);
+          this.SET_CURRENT_SUBTITLE_TIMELINE(this.lrcObj.lines);
+          this.lrcObj.play(this.player.currentTime * 1000);
+        } else {
+          // 未知格式
+          this.subtitleType = null;
+          this.SET_CURRENT_SUBTITLE_FILE('');
+          this.SET_CURRENT_SUBTITLE_HASH('');
+          this.SET_CURRENT_SUBTITLE_TIMELINE([]);
+          this.lrcAvailable = false;
+          this.lrcObj.setLyric('');
+          this.SET_CURRENT_LYRIC('');
+          this.vttCues = [];
+        }
+      });
+    },
+
+    /** 查找并加载歌词文件 */
+    findLoadLrcFile() {
       const token = this.$q.localStorage.getItem('jwt-token') || '';
       const fileHash = this.queue[this.queueIndex].hash;
       const url = `/api/media/check-lrc/${fileHash}?token=${token}`;
@@ -285,37 +342,14 @@ export default {
         .get(url)
         .then(response => {
           if (response.data.result) {
-            this.lrcAvailable = true;
-            this.subtitleType = null;
-            const lrcUrl = `/api/media/stream/${response.data.hash}?token=${token}`;
-            this.$axios.get(lrcUrl).then(response => {
-              const text = response.data;
-              // 判断格式
-              console.log(text.slice(0, 100));
-              if (/^\s*WEBVTT/i.test(text) || /\d{2}:\d{2}:\d{2}\.\d{3} -->/.test(text)) {
-                // VTT格式
-                console.log('检测到VTT格式歌词');
-                this.subtitleType = 'vtt';
-                this.parseVtt(text);
-              } else if (/\[\d{1,2}:\d{2}(?:\.\d{1,2})?\]/.test(text)) {
-                // LRC格式
-                console.log('检测到LRC格式歌词');
-                this.subtitleType = 'lrc';
-                this.lrcObj.setLyric(text);
-                this.lrcObj.play(this.player.currentTime * 1000);
-              } else {
-                // 未知格式
-                this.subtitleType = null;
-                this.lrcAvailable = false;
-                this.lrcObj.setLyric('');
-                this.SET_CURRENT_LYRIC('');
-                this.vttCues = [];
-              }
-            });
+            this.loadLrcFile(response.data.hash);
           } else {
             // 无歌词文件
             this.lrcAvailable = false;
             this.subtitleType = null;
+            this.SET_CURRENT_SUBTITLE_FILE('');
+            this.SET_CURRENT_SUBTITLE_HASH('');
+            this.SET_CURRENT_SUBTITLE_TIMELINE([]);
             this.lrcObj.setLyric('');
             this.SET_CURRENT_LYRIC('');
             this.vttCues = [];
@@ -354,8 +388,21 @@ export default {
       } catch (e) {
         this.vttCues = [];
         this.lrcAvailable = false;
+        this.SET_CURRENT_SUBTITLE_FILE('');
+        this.SET_CURRENT_SUBTITLE_HASH('');
+        this.SET_CURRENT_SUBTITLE_TIMELINE([]);
         this.SET_CURRENT_LYRIC('');
         console.error('VTT解析异常', e);
+      }
+    },
+
+    /**
+     * 通过设置plyr播放位置（单位：毫秒）
+     * @param {number} ms - 目标播放位置，单位毫秒
+     */
+    setCurrentTimeMs(ms) {
+      if (this.player && typeof ms === 'number' && !isNaN(ms)) {
+        this.player.currentTime = ms / 1000;
       }
     },
   },
@@ -365,7 +412,7 @@ export default {
     this.SET_VOLUME(this.player.volume);
     this.initLrcObj();
     if (this.source) {
-      this.loadLrcFile();
+      this.findLoadLrcFile();
     }
     // 监听 plyr 的 seeking/seeked 事件
     const plyr = this.$refs.plyr;

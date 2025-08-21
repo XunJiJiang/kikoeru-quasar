@@ -146,6 +146,24 @@ const mutations = {
       switchPictureInPictureTimer = null;
     }, 500);
   },
+
+  /** 修改当前字幕文件 */
+  SET_CURRENT_SUBTITLE_FILE: (state, file) => {
+    state.currentSubtitlesFile = file;
+  },
+
+  /** 修改当前字幕文件哈希 */
+  SET_CURRENT_SUBTITLE_HASH: (state, hash) => {
+    state.currentSubtitlesHash = hash;
+  },
+
+  /**
+   * 修改当前字幕时间线数组
+   * @param {Array<{time: number, text: string}>} timeline - 字幕时间线数组
+   */
+  SET_CURRENT_SUBTITLE_TIMELINE: (state, timeline) => {
+    state.currentSubtitlesTimeline = timeline;
+  },
 };
 
 let switchPictureInPictureTimer = null;

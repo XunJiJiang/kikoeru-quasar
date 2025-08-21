@@ -30,5 +30,14 @@ export default function() {
 
     // 是否开启了画中画字幕
     hasPictureInPicture: false,
+    // 当前字幕文件
+    currentSubtitlesFile: '',
+    // 当前字幕文件的哈希值
+    currentSubtitlesHash: '',
+    /**
+     * 当前字幕的时间线数组
+     * @type {Array<{time: number, text: string}>} - time: 单位: 毫秒, text: 字幕文本
+     */
+    currentSubtitlesTimeline: [],
   };
 }
