@@ -308,7 +308,6 @@ export default {
               text,
             }))
           );
-          console.log('this.vttCues', this.vttCues);
         } else if (/\[\d{1,2}:\d{2}(?:\.\d{1,2})?\]/.test(text)) {
           // LRC格式
           console.log('检测到LRC格式歌词');

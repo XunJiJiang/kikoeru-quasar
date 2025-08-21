@@ -9,8 +9,8 @@ const mutations = {
   PAUSE(state) {
     state.playing = false;
   },
-  TOGGLE_PLAYING(state) {
-    state.playing = !state.playing;
+  TOGGLE_PLAYING(state, value) {
+    state.playing = typeof value === 'boolean' ? value : !state.playing;
   },
 
   // Play a specific file from the queue.
@@ -163,6 +163,11 @@ const mutations = {
    */
   SET_CURRENT_SUBTITLE_TIMELINE: (state, timeline) => {
     state.currentSubtitlesTimeline = timeline;
+  },
+
+  /** 由 LyricsBar 组件调用的, 提供在需要呼出画中画窗口时调用的函数 */
+  SET_OPEN_PICTURE_IN_PICTURE: (state, func) => {
+    state.openPictureInPicture = func;
   },
 };
 

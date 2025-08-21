@@ -38,7 +38,13 @@ export default {
   name: 'LyricsBar',
 
   computed: {
-    ...mapState('AudioPlayer', ['playing', 'currentLyric', 'hasPictureInPicture']),
+    ...mapState('AudioPlayer', [
+      'playing',
+      'currentTime',
+      'currentLyric',
+      'hasPictureInPicture',
+      'currentSubtitlesTimeline',
+    ]),
 
     draggable() {
       return document.getElementById('draggable');
@@ -56,39 +62,67 @@ export default {
       // 是否隐藏内部歌词
       hideLyrics: false,
 
-      // 画中画窗口 document
+      // doc 画中画窗口 document
       pipWindow: null,
+
+      /**
+       * 视频画中画 video
+       */
+      ...(() => {
+        if (window.documentPictureInPicture) {
+          return {
+            videoDom: null,
+          };
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = 400;
+        canvas.height = 100;
+        const ctx = canvas.getContext('2d');
+
+        // 创建假视频流
+        const stream = canvas.captureStream(30); // 30fps
+        const videoDom = document.createElement('video');
+        videoDom.srcObject = stream;
+        videoDom.style.cssText =
+          'position:fixed;bottom:10px;left:10px;width:400px;height:100px;pointer-events:none;z-index:-1;opacity:0;';
+        document.body.appendChild(videoDom);
+        return {
+          videoDom,
+          videoCtx: ctx,
+        };
+      })(),
     };
   },
 
   watch: {
     /** 监视 hasPictureInPicture */
     async hasPictureInPicture(newVal) {
-      if (!window.documentPictureInPicture) {
+      if (window.documentPictureInPicture) {
+        if (newVal) {
+          this.hideLyrics = true; // 隐藏歌词
+          const pipWindow = await window.documentPictureInPicture.requestWindow({
+            width: 400,
+            height: 100,
+          });
+          this.pipWindow = pipWindow;
+          pipWindow.addEventListener('pagehide', () => {
+            this.switchPictureInPicture();
+          });
+          window.documentPictureInPicture.addEventListener('enter', () => {
+            this.pipReady = true;
+          });
+        } else {
+          this.hideLyrics = false; // 显示字幕
+          if (window.documentPictureInPicture.window) {
+            window.documentPictureInPicture.window.close();
+          }
+        }
         return;
       }
-      if (newVal) {
-        this.hideLyrics = true; // 隐藏歌词
-        const pipWindow = await window.documentPictureInPicture.requestWindow({
-          width: 400,
-          height: 100,
-        });
 
-        this.pipWindow = pipWindow;
-
-        pipWindow.addEventListener('pagehide', () => {
-          this.switchPictureInPicture();
-        });
-
-        window.documentPictureInPicture.addEventListener('enter', () => {
-          this.pipReady = true;
-        });
-      } else {
-        this.hideLyrics = false; // 显示歌词
-        if (window.documentPictureInPicture.window) {
-          window.documentPictureInPicture.window.close();
-        }
-      }
+      console.warn('当前浏览器不支持 document Picture-in-Picture');
+      // 都不支持，直接退出
+      // this.switchPictureInPicture();
     },
 
     playing(newVal) {
@@ -113,6 +147,20 @@ export default {
         const lyric = pipDoc.querySelector('#lyric-text');
         if (lyric) {
           lyric.textContent = newVal;
+        }
+      }
+
+      if (this.videoDom) {
+        const ctx = this.videoCtx;
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, 400, 100);
+        if (this.currentLyric) {
+          console.log('当前歌词:', this.currentLyric);
+          ctx.fillStyle = 'white';
+          ctx.font = '26px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(this.currentLyric, 200, 50);
         }
       }
     },
@@ -140,27 +188,40 @@ export default {
         this.attachPipPlayToggleHandler();
       }
     },
+
+    /**
+     *
+     * @param {number} time 秒
+     */
+    currentTime(time) {
+      console.log('当前时间:', time);
+      if (this.videoDom) {
+        this.videoDom.currentTime = time;
+      }
+    },
   },
 
   methods: {
+    ...mapMutations('AudioPlayer', {
+      togglePlaying: 'TOGGLE_PLAYING',
+      switchPictureInPicture: 'TOGGLE_PICTURE_IN_PICTURE',
+      setOpenPictureInPicture: 'SET_OPEN_PICTURE_IN_PICTURE',
+    }),
+
     /**
      * 在画中画窗口中添加播放/暂停按钮的事件监听
      */
     attachPipPlayToggleHandler() {
-      if (!this.pipWindow || !this.pipWindow.document) return;
-      const pipDoc = this.pipWindow.document;
-      const btn = pipDoc.getElementById('pip-play-toggle');
-      if (btn) {
-        btn.onclick = () => {
-          this.togglePlaying();
-        };
+      if (this.pipWindow && this.pipWindow.document) {
+        const pipDoc = this.pipWindow.document;
+        const btn = pipDoc.getElementById('pip-play-toggle');
+        if (btn) {
+          btn.onclick = () => {
+            this.togglePlaying();
+          };
+        }
       }
     },
-
-    ...mapMutations('AudioPlayer', {
-      togglePlaying: 'TOGGLE_PLAYING',
-      switchPictureInPicture: 'TOGGLE_PICTURE_IN_PICTURE',
-    }),
 
     /**
      * @param {TouchEvent|MouseEvent} ev
@@ -188,6 +249,50 @@ export default {
   mounted() {
     addEventListener('mousemove', onCursorMove(this), false);
     addEventListener('touchmove', onCursorMove(this), false);
+
+    document.addEventListener('leavepictureinpicture', () => {
+      this.switchPictureInPicture();
+      this.hideLyrics = false;
+    });
+
+    if (this.videoDom) {
+      this.videoDom
+        .play()
+        .then(() => {
+          console.log('视频画中画已准备就绪');
+        })
+        .catch(e => {
+          console.log(e);
+        });
+
+      this.videoDom.onplay = () => {
+        this.togglePlaying(true);
+      };
+      this.videoDom.onpause = () => {
+        this.togglePlaying(false);
+      };
+    }
+
+    this.setOpenPictureInPicture(() => {
+      if (!this.videoDom) {
+        return;
+      }
+      if (this.hasPictureInPicture) {
+        this.videoDom
+          .requestPictureInPicture()
+          .then(() => {
+            this.hideLyrics = true;
+          })
+          .catch(e => {
+            console.warn(e);
+          });
+      } else {
+        if (document.pictureInPictureElement) {
+          document.exitPictureInPicture();
+        }
+        this.hideLyrics = false;
+      }
+    });
   },
 };
 </script>
