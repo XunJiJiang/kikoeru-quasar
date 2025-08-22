@@ -1,6 +1,6 @@
 <template>
   <q-layout view="hHh Lpr lFf" class="bg-grey-3">
-    <q-header class="shadow-4">
+    <q-header class="shadow-4" style="z-index: 3001">
       <q-toolbar class="row justify-between">
         <q-btn flat dense round @click="drawerOpen = !drawerOpen" icon="menu" aria-label="Menu" />
 
@@ -33,7 +33,7 @@
       :width="230"
       :breakpoint="500"
       bordered
-      content-class="bg-grey-1"
+      content-class="bg-grey-1 z-index-1"
     >
       <q-scroll-area class="fit">
         <q-list>

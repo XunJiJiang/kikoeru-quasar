@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="audio-player-container">
     <!-- 播放器 -->
-    <q-slide-transition>
+    <q-slide-transition class="relative">
       <q-card
         square
         v-show="currentPlayingFile.hash && !hide"
@@ -17,11 +17,11 @@
             size="md"
             @click="toggleHide()"
             class="absolute"
-            style="background-color: #fffa; width: 100px; height: 6px; overflow: hidden; left: 50%; top: 10px; transform: translateX(-50%);"
+            style="background-color: #fffa; width: 100px; height: 6px; overflow: hidden; left: 50%; top: 10px; transform: translateX(-50%); z-index: 1;"
           />
         </div>
 
-        <q-card style="background-color: #fff8; backdrop-filter: blur(15px);">
+        <q-card class="options-container" style="background-color: #fff8; backdrop-filter: blur(15px);">
           <!-- Place holder for iOS -->
           <div style="height: 5px" v-if="$q.platform.is.ios" />
 
@@ -605,7 +605,9 @@ export default {
   // 宽度 > $breakpoint-sm-min
   @media (min-width: $breakpoint-sm-min) {
     width: 330px;
+    max-height: calc(100vh - 20px);
     margin: 0px 10px 10px 0px;
+    height: 100%;
   }
   // 宽度 < $breakpoint-xs-max (599px)
   @media (max-width: $breakpoint-xs-max) {
@@ -615,10 +617,29 @@ export default {
 }
 
 .albumart {
+  @media (min-width: $breakpoint-sm-min) {
+    max-height: calc(95vh - 267px);
+
+    position: absolute;
+    bottom: 267px;
+    left: 0;
+    right: 0;
+  }
   // 宽度 < $breakpoint-xs-max (599px)
   @media (max-width: $breakpoint-xs-max) {
     width: 100%;
-    height: calc(100% - 280px);
+    height: calc(100% - 267px);
+  }
+}
+
+.options-container {
+  @media (min-width: $breakpoint-sm-min) {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 267px;
   }
 }
 
@@ -631,7 +652,7 @@ export default {
   }
   // 宽度 < $breakpoint-xs-max (599px)
   @media (max-width: $breakpoint-xs-max) {
-    min-width: 280px;
+    min-width: 267px;
   }
 }
 </style>
