@@ -155,7 +155,7 @@
               class="col-auto"
             />
 
-            <q-dialog v-model="visibleSubtitlesSelectBar">
+            <q-dialog v-model="visibleSubtitlesSelectBar" @show="onShowSubtitlesSelectBar">
               <q-layout container style="background-color: #fff;">
                 <q-header class="bg-white">
                   <q-bar>
@@ -169,28 +169,37 @@
                       style="max-width: calc(100% - 40px);"
                     />
                     <q-space />
-                    <q-btn dense flat icon="close" v-close-popup>
-                      <q-tooltip>Close</q-tooltip>
-                    </q-btn>
+                    <q-btn dense flat icon="close" v-close-popup />
                   </q-bar>
                 </q-header>
                 <q-footer style="height: 30px;">
                   <div>Footer</div>
                 </q-footer>
                 <q-card style="margin: 30px 0; border-radius: 0;">
-                  <q-list>
-                    <q-item
-                      v-for="(item, index) in currentSubtitlesTimeline"
-                      :key="index"
-                      clickable
-                      @click="setCurrentTimeMs(item.time)"
-                    >
-                      <q-item-section>
-                        <q-item-label caption>{{ formatSeconds(Math.floor(item.time / 1000)) }}</q-item-label>
-                        <q-item-label>{{ item.text }}</q-item-label></q-item-section
+                  <q-card-section style="max-height: calc(100vh - 48px - 60px); padding: 0;" class="scroll">
+                    <q-list>
+                      <q-item
+                        v-for="(item, index) in currentSubtitlesTimeline"
+                        :key="index"
+                        clickable
+                        @click="setCurrentTimeMs(item.time)"
+                        :style="{
+                          backgroundColor:
+                            currentTime >= item.time / 1000 &&
+                            (!currentSubtitlesTimeline[index + 1] ||
+                              currentTime < currentSubtitlesTimeline[index + 1].time / 1000)
+                              ? '#5ac5'
+                              : 'transparent',
+                        }"
                       >
-                    </q-item>
-                  </q-list>
+                        <div ref="anchor-point-ref" style="width: 0; height: 100%;"></div>
+                        <q-item-section>
+                          <q-item-label caption>{{ formatSeconds(Math.floor(item.time / 1000)) }}</q-item-label>
+                          <q-item-label>{{ item.text }}</q-item-label></q-item-section
+                        >
+                      </q-item>
+                    </q-list>
+                  </q-card-section>
                 </q-card>
               </q-layout>
             </q-dialog>
@@ -527,6 +536,22 @@ export default {
       this.switchPictureInPicture();
 
       this.openPictureInPicture();
+    },
+
+    onShowSubtitlesSelectBar() {
+      // 滚动到当前字幕
+      const currentTime = this.currentTime;
+      const currentSubtitlesIndex = this.currentSubtitlesTimeline.findIndex(
+        (item, index) =>
+          currentTime >= item.time / 1000 &&
+          (!this.currentSubtitlesTimeline[index + 1] ||
+            currentTime < this.currentSubtitlesTimeline[index + 1].time / 1000)
+      );
+      if (currentSubtitlesIndex !== -1) {
+        this.$refs['anchor-point-ref'][currentSubtitlesIndex].scrollIntoView({
+          behavior: 'instant',
+        });
+      }
     },
 
     formatSeconds(seconds) {

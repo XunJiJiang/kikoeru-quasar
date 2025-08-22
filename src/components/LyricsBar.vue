@@ -155,7 +155,6 @@ export default {
         ctx.fillStyle = 'black';
         ctx.fillRect(0, 0, 400, 100);
         if (this.currentLyric) {
-          console.log('当前歌词:', this.currentLyric);
           ctx.fillStyle = 'white';
           ctx.font = '16px sans-serif';
           ctx.textAlign = 'center';
@@ -194,7 +193,6 @@ export default {
      * @param {number} time 秒
      */
     currentTime(time) {
-      console.log('当前时间:', time);
       if (this.videoDom) {
         this.videoDom.currentTime = time;
       }
@@ -262,7 +260,7 @@ export default {
           console.log('视频画中画已准备就绪');
         })
         .catch(e => {
-          console.log(e);
+          console.warn(e);
         });
 
       this.videoDom.onplay = () => {
