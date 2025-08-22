@@ -223,8 +223,10 @@ export default {
         const pipDoc = newVal.document;
         pipDoc.body.style.cssText = 'background-color:#000;margin:0;padding:0;';
         pipDoc.body.innerHTML = `
-            <div id="lyricsBar" style="text-align:center;font-size:1em;color:#fffd;background-color:#000;">
-              <span id="lyric-text">${this.currentLyric}</span>
+            <div id="lyricsBar" style="position:relative;text-align:center;font-size:1em;color:#fffd;background-color:#000;height: 100vh;width: 100vw;">
+              <span id="lyric-text" style="display:inline-block;position:absolute;top:50%;transform:translateY(-50%);left:0;right:0">${
+                this.currentLyric
+              }</span>
               <button id="pip-play-toggle" style="position:absolute;bottom:3px;left:3px;padding:4px 12px;font-size:1em;background:none;border:none;outline:none;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;border-radius:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='none'">
               ${
                 this.playing
