@@ -285,7 +285,10 @@ export default {
       });
     },
 
-    /** 加载指定 hash 的字幕文件 */
+    /**
+     * 加载指定 hash 的字幕文件
+     * @param {string} hash - 字幕文件的哈希值
+     */
     loadLrcFile(hash) {
       const token = this.$q.localStorage.getItem('jwt-token') || '';
       this.lrcAvailable = true;
@@ -294,10 +297,9 @@ export default {
       this.$axios.get(lrcUrl).then(response => {
         const text = response.data;
         // 判断格式
-        console.log(text.slice(0, 100));
         if (/^\s*WEBVTT/i.test(text) || /\d{2}:\d{2}:\d{2}\.\d{3} -->/.test(text)) {
           // VTT格式
-          console.log('检测到VTT格式歌词');
+          console.log('字幕格式: VTT');
           this.subtitleType = 'vtt';
           this.SET_CURRENT_SUBTITLE_FILE(text);
           this.SET_CURRENT_SUBTITLE_HASH(hash);
@@ -310,7 +312,7 @@ export default {
           );
         } else if (/\[\d{1,2}:\d{2}(?:\.\d{1,2})?\]/.test(text)) {
           // LRC格式
-          console.log('检测到LRC格式歌词');
+          console.log('字幕格式: LRC');
           this.subtitleType = 'lrc';
           this.SET_CURRENT_SUBTITLE_FILE(text);
           this.SET_CURRENT_SUBTITLE_HASH(hash);
@@ -319,6 +321,7 @@ export default {
           this.lrcObj.play(this.player.currentTime * 1000);
         } else {
           // 未知格式
+          console.warn('未知字幕格式', text.slice(0, 100));
           this.subtitleType = null;
           this.SET_CURRENT_SUBTITLE_FILE('');
           this.SET_CURRENT_SUBTITLE_HASH('');
@@ -365,11 +368,16 @@ export default {
         });
     },
 
+    /**
+     * 解析VTT文本，填充vttCues
+     * @param {string} text
+     */
     parseVtt(text) {
       // 解析VTT文本，填充vttCues
       this.vttCues = [];
       try {
         const parser = new WebVTT.Parser(window);
+        // 这个居然可以同步执行
         parser.oncue = cue => {
           this.vttCues.push({
             start: cue.startTime,

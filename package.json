@@ -2,7 +2,7 @@
   "name": "kikoeru-quasar",
   "version": "0.6.2",
   "description": "A self-hosted web media player for listening to your DLsite voice works.",
-  "homepage": "https://github.com/kikoeru-project/kikoeru-quasar",
+  "homepage": "https://github.com/XunJiJiang/kikoeru-quasar",
   "productName": "Kikoeru",
   "cordovaId": "org.cordova.quasar.kikoeru",
   "capacitorId": "",
@@ -13,7 +13,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git@github.com:kikoeru-project/kikoeru-quasar.git"
+    "url": "git@github.com:XunJiJiang/kikoeru-quasar.git"
   },
   "license": "GPL-3.0-only",
   "keywords": [
