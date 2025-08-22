@@ -10,3 +10,9 @@
 a {
   text-decoration: none;
 }
+
+.q-field__control-container {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -156,7 +156,7 @@
             />
 
             <q-dialog v-model="visibleSubtitlesSelectBar">
-              <q-layout container>
+              <q-layout container style="background-color: #fff;">
                 <q-header class="bg-white">
                   <q-bar>
                     <q-select
@@ -166,6 +166,7 @@
                       option-label="title"
                       option-value="hash"
                       option-dense
+                      style="max-width: calc(100% - 40px);"
                     />
                     <q-space />
                     <q-btn dense flat icon="close" v-close-popup>
@@ -173,10 +174,10 @@
                     </q-btn>
                   </q-bar>
                 </q-header>
-                <q-footer>
+                <q-footer style="height: 30px;">
                   <div>Footer</div>
                 </q-footer>
-                <q-card style="margin-top: 30px;">
+                <q-card style="margin: 30px 0; border-radius: 0;">
                   <q-list>
                     <q-item
                       v-for="(item, index) in currentSubtitlesTimeline"

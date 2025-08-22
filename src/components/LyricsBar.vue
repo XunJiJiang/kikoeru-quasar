@@ -157,7 +157,7 @@ export default {
         if (this.currentLyric) {
           console.log('当前歌词:', this.currentLyric);
           ctx.fillStyle = 'white';
-          ctx.font = '26px sans-serif';
+          ctx.font = '16px sans-serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(this.currentLyric, 200, 50);
