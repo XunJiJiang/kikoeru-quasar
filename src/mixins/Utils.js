@@ -19,5 +19,21 @@ export default {
         }
       }
     },
+
+    /** 计算字符串宽度 */
+    getStringWidth(str, style) {
+      const strDom = document.createElement('span');
+      for (const key in style) {
+        strDom.style[key] = style[key];
+      }
+      strDom.style.position = 'absolute';
+      strDom.style.visibility = 'hidden';
+      strDom.style.pointerEvents = 'none';
+      strDom.textContent = str;
+      document.body.appendChild(strDom);
+      const width = strDom.offsetWidth;
+      document.body.removeChild(strDom);
+      return width;
+    },
   },
 };

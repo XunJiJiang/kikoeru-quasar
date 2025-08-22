@@ -17,6 +17,7 @@
 
 <script>
 import { mapState, mapMutations } from 'vuex';
+import Utils from '../mixins/Utils';
 
 const onCursorMove = that => ev => {
   if (!that.beTouched) {
@@ -36,6 +37,8 @@ const onCursorMove = that => ev => {
 
 export default {
   name: 'LyricsBar',
+
+  mixins: [Utils],
 
   computed: {
     ...mapState('AudioPlayer', [
@@ -75,8 +78,8 @@ export default {
           };
         }
         const canvas = document.createElement('canvas');
-        canvas.width = 400;
-        canvas.height = 100;
+        canvas.width = 1024;
+        canvas.height = 256;
         const ctx = canvas.getContext('2d');
 
         // 创建假视频流
@@ -150,16 +153,68 @@ export default {
         }
       }
 
+      // 更新画中画视频的歌词
       if (this.videoDom) {
         const ctx = this.videoCtx;
+        ctx.clearRect(0, 0, 1024, 256);
         ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, 400, 100);
+        ctx.fillRect(0, 0, 1024, 256);
+
         if (this.currentLyric) {
-          ctx.fillStyle = 'white';
-          ctx.font = '16px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(this.currentLyric, 200, 50);
+          const maxWidth = 1000;
+          const canvasWidth = 1024;
+          const canvasHeight = 256;
+          let fontSize = 48;
+          let font = `${fontSize}px sans-serif`;
+          ctx.font = font;
+
+          const text = this.currentLyric;
+          const textWidth = ctx.measureText(text).width;
+
+          if (textWidth <= maxWidth) {
+            // 一行能显示完整
+            ctx.font = font;
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvasWidth / 2, canvasHeight / 2);
+          } else {
+            // 尝试分两行
+            // 先暴力拆分
+            let splitIdx = text.length - 1;
+            let firstLine = text;
+            let secondLine = '';
+            // 找到第一行最大能显示的字数
+            for (let i = 1; i < text.length; i++) {
+              const part = text.slice(0, i);
+              if (ctx.measureText(part).width > maxWidth) {
+                splitIdx = i - 1;
+                break;
+              }
+            }
+            firstLine = text.slice(0, splitIdx);
+            secondLine = text.slice(splitIdx);
+
+            // 检查两行是否都能小于 maxWidth
+            if (ctx.measureText(firstLine).width <= maxWidth && ctx.measureText(secondLine).width <= maxWidth) {
+              ctx.font = font;
+              ctx.fillStyle = 'white';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(firstLine, canvasWidth / 2, canvasHeight / 2 - fontSize / 1.5);
+              ctx.fillText(secondLine, canvasWidth / 2, canvasHeight / 2 + fontSize / 1.5);
+            } else {
+              // 两行都超出，等比例缩小字体
+              let scale = maxWidth / Math.max(ctx.measureText(firstLine).width, ctx.measureText(secondLine).width);
+              let scaledFontSize = Math.floor(fontSize * scale);
+              ctx.font = `${scaledFontSize}px sans-serif`;
+              ctx.fillStyle = 'white';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(firstLine, canvasWidth / 2, canvasHeight / 2 - scaledFontSize / 1.5);
+              ctx.fillText(secondLine, canvasWidth / 2, canvasHeight / 2 + scaledFontSize / 1.5);
+            }
+          }
         }
       }
     },
