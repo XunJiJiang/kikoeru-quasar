@@ -12,6 +12,7 @@
           </router-link>
         </q-toolbar-title>
 
+        <!-- BUG: 在 ios 上, 会将输入合成事件触发时的内容也输入进去, 且 q-input 本身不支持监听输入合成事件 -->
         <q-input dark dense rounded standout v-model="keyword" debounce="500" input-class="text-right" class="q-mr-sm">
           <template v-slot:append>
             <q-icon v-if="keyword === ''" name="search" />
@@ -239,6 +240,7 @@ export default {
 
   methods: {
     ...mapMutations('AudioPlayer', ['SET_REWIND_SEEK_TIME', 'SET_FORWARD_SEEK_TIME']),
+
     initUser() {
       this.$axios
         .get('/api/auth/me')

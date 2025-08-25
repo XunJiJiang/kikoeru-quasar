@@ -12,13 +12,7 @@
         <!-- 音声封面 -->
         <div class="bg-dark row items-center albumart">
           <custom-img contain transition="fade" :src="coverUrl" :ratio="4 / 3" />
-          <q-btn
-            dense
-            size="md"
-            @click="toggleHide()"
-            class="absolute"
-            style="background-color: #fffa; width: 100px; height: 6px; overflow: hidden; left: 50%; top: 10px; transform: translateX(-50%); z-index: 1;"
-          />
+        <div @click="toggleHide()" class="absolute albumart-close"></div>
         </div>
 
         <q-card class="options-container" style="background-color: #fff8; backdrop-filter: blur(15px);">
@@ -687,6 +681,38 @@ export default {
   @media (max-width: $breakpoint-xs-max) {
     width: 100%;
     height: calc(100% - 267px);
+  }
+
+  cursor: grab;
+  &:active {
+    cursor: grabbing;
+  }
+
+  & .albumart-close {
+    width: 180px;
+    height: 24px;
+    overflow: hidden;
+    left: 50%;
+    top: 0px;
+    transform: translateX(-50%);
+    z-index: 1;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 8px;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 6px;
+      border-radius: 8px;
+      background-color: #fffa;
+      transition: background-color 0.3s ease;
+    }
+
+    &:hover::before {
+      background-color: #fffd;
+    }
   }
 }
 
