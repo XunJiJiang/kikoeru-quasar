@@ -29,7 +29,14 @@
         <!-- Place holder for iOS -->
         <div style="height: 5px" v-if="$q.platform.is.ios" />
 
-        <q-item style="height: 55px; padding: 8px 15px 0 15px;" class="text-center non-selectable">
+        <q-item
+          style="height: 55px; padding: 8px 15px 0 15px;"
+          class="text-center non-selectable audio-player-title"
+          @mousedown="startDragPlayerImg"
+          @touchstart="startDragPlayerImg"
+          @touchmove="draggingPlayerImg"
+          @touchend="endDragPlayerImg"
+        >
           <q-item-section>
             <q-item-label lines="2" class="text-bold">{{ currentPlayingFile.title }}</q-item-label>
             <q-item-label caption lines="1">{{ currentPlayingFile.workTitle }}</q-item-label>
@@ -796,6 +803,13 @@ export default {
     &:hover::before {
       background-color: #fffd;
     }
+  }
+}
+
+.audio-player-title {
+  cursor: grab;
+  &:active {
+    cursor: grabbing;
   }
 }
 
