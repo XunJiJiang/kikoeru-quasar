@@ -1,276 +1,278 @@
 <template>
   <div class="audio-player-container">
     <!-- 播放器 -->
-    <q-slide-transition class="relative">
-      <q-card
-        square
-        v-show="currentPlayingFile.hash && !hide"
-        class="fixed-bottom-right bg-white text-black audio-player"
-        @mousewheel.prevent
-        @touchmove.prevent
-      >
-        <!-- 音声封面 -->
-        <div class="bg-dark row items-center albumart">
-          <custom-img contain transition="fade" :src="coverUrl" :ratio="4 / 3" />
+    <q-card
+      square
+      v-show="showPlayerCard"
+      class="fixed-bottom-right bg-white text-black audio-player relative"
+      :style="{
+        transform: playerCardTransform,
+        transition: 'all 0.3s ease',
+      }"
+      @mousewheel.prevent
+      @touchmove.prevent
+    >
+      <!-- 音声封面 -->
+      <div class="bg-dark row items-center albumart">
+        <custom-img contain transition="fade" :src="coverUrl" :ratio="4 / 3" />
         <div @click="toggleHide()" class="absolute albumart-close"></div>
+      </div>
+
+      <q-card class="options-container" style="background-color: #fff8; backdrop-filter: blur(15px);">
+        <!-- Place holder for iOS -->
+        <div style="height: 5px" v-if="$q.platform.is.ios" />
+
+        <q-item style="height: 55px; padding: 8px 15px 0 15px;" class="text-center non-selectable">
+          <q-item-section>
+            <q-item-label lines="2" class="text-bold">{{ currentPlayingFile.title }}</q-item-label>
+            <q-item-label caption lines="1">{{ currentPlayingFile.workTitle }}</q-item-label>
+          </q-item-section>
+        </q-item>
+
+        <!-- Place holder for iOS -->
+        <div style="height: 10px" v-if="$q.platform.is.ios" />
+
+        <!-- 进度条控件 -->
+        <div class="column items-center q-mx-sm q-my-sm" style="height: 45px;">
+          <div style="width: 100%;">
+            <AudioElement ref="audio-element" class="col" />
+          </div>
+          <div class="row justify-between q-mt-xs" style="width: 100%;">
+            <div class="col-auto">{{ formatSeconds(currentTime) }}</div>
+            <div class="col-auto">{{ formatSeconds(duration) }}</div>
+          </div>
         </div>
 
-        <q-card class="options-container" style="background-color: #fff8; backdrop-filter: blur(15px);">
-          <!-- Place holder for iOS -->
-          <div style="height: 5px" v-if="$q.platform.is.ios" />
+        <!-- 播放按钮控件 -->
+        <div class="row justify-around" style="height: 55px;">
+          <q-btn
+            flat
+            dense
+            size="lg"
+            :icon="swapSeekButton ? rewindIcon : 'skip_previous'"
+            @click="swapSeekButton ? rewind(true) : previousTrack()"
+            style="width: 45px"
+            class="col-auto"
+          />
+          <q-btn
+            v-if="!hideSeekButton"
+            flat
+            dense
+            size="lg"
+            color="white"
+            text-color="dark"
+            style="opacity: 0.8"
+            @click="swapSeekButton ? previousTrack() : rewind(true)"
+            :icon="swapSeekButton ? 'skip_previous' : rewindIcon"
+          />
+          <q-btn
+            flat
+            dense
+            size="28px"
+            :icon="playingIcon"
+            @click="togglePlaying()"
+            style="width: 55px"
+            class="col-auto"
+          />
+          <q-btn
+            v-if="!hideSeekButton"
+            flat
+            dense
+            size="lg"
+            color="white"
+            text-color="dark"
+            style="opacity: 0.8"
+            @click="swapSeekButton ? nextTrack() : forward(true)"
+            :icon="swapSeekButton ? 'skip_next' : forwardIcon"
+          />
+          <q-btn
+            flat
+            dense
+            size="lg"
+            :icon="swapSeekButton ? forwardIcon : 'skip_next'"
+            @click="swapSeekButton ? forward(true) : nextTrack()"
+            style="width: 45px"
+            class="col-auto"
+          />
+        </div>
 
-          <q-item style="height: 55px; padding: 8px 15px 0 15px;" class="text-center non-selectable">
-            <q-item-section>
-              <q-item-label lines="2" class="text-bold">{{ currentPlayingFile.title }}</q-item-label>
-              <q-item-label caption lines="1">{{ currentPlayingFile.workTitle }}</q-item-label>
-            </q-item-section>
-          </q-item>
+        <!-- 音量控件 -->
+        <!-- HTML5 volume in iOS is read-only -->
+        <div class="row items-center q-mx-lg" style="height: 50px;" v-if="!$q.platform.is.ios">
+          <q-icon name="volume_down" size="sm" class="col-auto" />
+          <vue-slider
+            v-model="volume"
+            :min="0"
+            :max="1"
+            :interval="0.01"
+            :dragOnClick="true"
+            :contained="true"
+            tooltip="none"
+            class="col"
+          />
+          <q-icon name="volume_up" size="sm" class="col-auto" />
+        </div>
 
-          <!-- Place holder for iOS -->
-          <div style="height: 10px" v-if="$q.platform.is.ios" />
+        <div class="row justify-center" style="height: 45px; gap: 5px;">
+          <q-btn
+            flat
+            dense
+            size="md"
+            icon="queue_music"
+            @click="showCurrentPlayList = !showCurrentPlayList"
+            style="height: 35px; width: 40px"
+            class="col-auto"
+          />
+          <q-btn
+            flat
+            dense
+            size="md"
+            :icon="playModeIcon"
+            @click="changePlayMode()"
+            style="height: 35px; width: 40px"
+            class="col-auto"
+          />
+          <q-btn
+            flat
+            dense
+            size="md"
+            icon="picture_in_picture_alt"
+            :disabled="!currentSubtitlesHash"
+            @click="_switchPictureInPicture()"
+            style="height: 35px; width: 40px"
+            class="col-auto"
+          />
+          <q-btn
+            flat
+            dense
+            size="md"
+            icon="subtitles"
+            @click="visibleSubtitlesSelectBar = !visibleSubtitlesSelectBar"
+            style="height: 35px; width: 40px"
+            class="col-auto"
+          />
 
-          <!-- 进度条控件 -->
-          <div class="column items-center q-mx-sm q-my-sm" style="height: 45px;">
-            <div style="width: 100%;">
-              <AudioElement ref="audio-element" class="col" />
-            </div>
-            <div class="row justify-between q-mt-xs" style="width: 100%;">
-              <div class="col-auto">{{ formatSeconds(currentTime) }}</div>
-              <div class="col-auto">{{ formatSeconds(duration) }}</div>
-            </div>
-          </div>
-
-          <!-- 播放按钮控件 -->
-          <div class="row justify-around" style="height: 55px;">
-            <q-btn
-              flat
-              dense
-              size="lg"
-              :icon="swapSeekButton ? rewindIcon : 'skip_previous'"
-              @click="swapSeekButton ? rewind(true) : previousTrack()"
-              style="width: 45px"
-              class="col-auto"
-            />
-            <q-btn
-              v-if="!hideSeekButton"
-              flat
-              dense
-              size="lg"
-              color="white"
-              text-color="dark"
-              style="opacity: 0.8"
-              @click="swapSeekButton ? previousTrack() : rewind(true)"
-              :icon="swapSeekButton ? 'skip_previous' : rewindIcon"
-            />
-            <q-btn
-              flat
-              dense
-              size="28px"
-              :icon="playingIcon"
-              @click="togglePlaying()"
-              style="width: 55px"
-              class="col-auto"
-            />
-            <q-btn
-              v-if="!hideSeekButton"
-              flat
-              dense
-              size="lg"
-              color="white"
-              text-color="dark"
-              style="opacity: 0.8"
-              @click="swapSeekButton ? nextTrack() : forward(true)"
-              :icon="swapSeekButton ? 'skip_next' : forwardIcon"
-            />
-            <q-btn
-              flat
-              dense
-              size="lg"
-              :icon="swapSeekButton ? forwardIcon : 'skip_next'"
-              @click="swapSeekButton ? forward(true) : nextTrack()"
-              style="width: 45px"
-              class="col-auto"
-            />
-          </div>
-
-          <!-- 音量控件 -->
-          <!-- HTML5 volume in iOS is read-only -->
-          <div class="row items-center q-mx-lg" style="height: 50px;" v-if="!$q.platform.is.ios">
-            <q-icon name="volume_down" size="sm" class="col-auto" />
-            <vue-slider
-              v-model="volume"
-              :min="0"
-              :max="1"
-              :interval="0.01"
-              :dragOnClick="true"
-              :contained="true"
-              tooltip="none"
-              class="col"
-            />
-            <q-icon name="volume_up" size="sm" class="col-auto" />
-          </div>
-
-          <div class="row justify-center" style="height: 45px; gap: 5px;">
-            <q-btn
-              flat
-              dense
-              size="md"
-              icon="queue_music"
-              @click="showCurrentPlayList = !showCurrentPlayList"
-              style="height: 35px; width: 40px"
-              class="col-auto"
-            />
-            <q-btn
-              flat
-              dense
-              size="md"
-              :icon="playModeIcon"
-              @click="changePlayMode()"
-              style="height: 35px; width: 40px"
-              class="col-auto"
-            />
-            <q-btn
-              flat
-              dense
-              size="md"
-              icon="picture_in_picture_alt"
-              :disabled="!currentSubtitlesHash"
-              @click="_switchPictureInPicture()"
-              style="height: 35px; width: 40px"
-              class="col-auto"
-            />
-            <q-btn
-              flat
-              dense
-              size="md"
-              icon="subtitles"
-              @click="visibleSubtitlesSelectBar = !visibleSubtitlesSelectBar"
-              style="height: 35px; width: 40px"
-              class="col-auto"
-            />
-
-            <q-dialog
-              v-model="visibleSubtitlesSelectBar"
-              @show="onShowSubtitlesSelectBar"
-              class="subtitles-select-dialog"
-            >
-              <q-layout container style="background-color: #fff;">
-                <q-header class="bg-white">
-                  <q-bar>
-                    <q-select
-                      dense
-                      v-model="currentSubtitlesItem"
-                      :options="currentAllSubtitlesFiles"
-                      option-label="title"
-                      option-value="hash"
-                      option-dense
-                      style="max-width: calc(100% - 40px);"
-                    />
-                    <q-space />
-                    <q-btn dense flat icon="close" v-close-popup />
-                  </q-bar>
-                </q-header>
-                <q-footer style="height: 30px; background-color: transparent;" class="subtitles-dialog-footer">
-                  <q-bar style="display: flex; justify-content: flex-end; gap: 8px; color: #444;">
-                    <q-btn dense flat @click="setSubtitlesDelay(0)">重置</q-btn>
-                    <q-btn dense flat @click="adjustSubtitlesDelay(-1000)">-1.0s</q-btn>
-                    <q-btn dense flat @click="adjustSubtitlesDelay(-300)">-0.3s</q-btn>
-                    <q-input
-                      dense
-                      filled
-                      size="sm"
-                      style="text-align: center; width: 60px; font-size: 12px;"
-                      :value="subtitlesDelay / 1000"
-                      type="number"
-                      @input="setSubtitlesDelay(Number($event) * 1000)"
-                      :step="0.1"
-                      color="#444"
-                    />
-                    <q-btn dense flat @click="adjustSubtitlesDelay(300)">+0.3s</q-btn>
-                    <q-btn dense flat @click="adjustSubtitlesDelay(1000)">+1.0s</q-btn>
-                  </q-bar>
-                </q-footer>
-                <q-card style="margin: 30px 0; border-radius: 0; box-shadow: none;">
-                  <q-card-section style="max-height: calc(100vh - 48px - 60px); padding: 0;" class="scroll">
-                    <q-list>
-                      <q-item
-                        v-for="(item, index) in currentSubtitlesTimeline"
-                        :key="index"
-                        clickable
-                        @click="setCurrentTimeMs(item.time - subtitlesDelay)"
-                        :style="{
-                          backgroundColor:
-                            currentTime + subtitlesDelay / 1000 >= item.time / 1000 &&
-                            (!currentSubtitlesTimeline[index + 1] ||
-                              currentTime + subtitlesDelay / 1000 < currentSubtitlesTimeline[index + 1].time / 1000)
-                              ? '#5ac5'
-                              : 'transparent',
-                        }"
-                      >
-                        <div ref="anchor-point-ref" style="width: 0; height: 100%;"></div>
-                        <q-item-section>
-                          <q-item-label caption
-                            >{{ formatSeconds(Math.floor(item.time / 1000))
-                            }}{{
-                              subtitlesDelay === 0
-                                ? ''
-                                : ` (${subtitlesDelay > 0 ? '-' : '+'}${Math.abs(
-                                    subtitlesDelay / 1000
-                                  )}s = ${formatSeconds(Math.floor(item.time / 1000 - subtitlesDelay / 1000))})`
-                            }}</q-item-label
-                          >
-                          <q-item-label>{{ item.text }}</q-item-label></q-item-section
+          <q-dialog
+            v-model="visibleSubtitlesSelectBar"
+            @show="onShowSubtitlesSelectBar"
+            class="subtitles-select-dialog"
+          >
+            <q-layout container style="background-color: #fff;">
+              <q-header class="bg-white">
+                <q-bar>
+                  <q-select
+                    dense
+                    v-model="currentSubtitlesItem"
+                    :options="currentAllSubtitlesFiles"
+                    option-label="title"
+                    option-value="hash"
+                    option-dense
+                    style="max-width: calc(100% - 40px);"
+                  />
+                  <q-space />
+                  <q-btn dense flat icon="close" v-close-popup />
+                </q-bar>
+              </q-header>
+              <q-footer style="height: 30px; background-color: transparent;" class="subtitles-dialog-footer">
+                <q-bar style="display: flex; justify-content: flex-end; gap: 8px; color: #444;">
+                  <q-btn dense flat @click="setSubtitlesDelay(0)">重置</q-btn>
+                  <q-btn dense flat @click="adjustSubtitlesDelay(-1000)">-1.0s</q-btn>
+                  <q-btn dense flat @click="adjustSubtitlesDelay(-300)">-0.3s</q-btn>
+                  <q-input
+                    dense
+                    filled
+                    size="sm"
+                    style="text-align: center; width: 60px; font-size: 12px;"
+                    :value="subtitlesDelay / 1000"
+                    type="number"
+                    @input="setSubtitlesDelay(Number($event) * 1000)"
+                    :step="0.1"
+                    color="#444"
+                  />
+                  <q-btn dense flat @click="adjustSubtitlesDelay(300)">+0.3s</q-btn>
+                  <q-btn dense flat @click="adjustSubtitlesDelay(1000)">+1.0s</q-btn>
+                </q-bar>
+              </q-footer>
+              <q-card style="margin: 30px 0; border-radius: 0; box-shadow: none;">
+                <q-card-section style="max-height: calc(100vh - 48px - 60px); padding: 0;" class="scroll">
+                  <q-list>
+                    <q-item
+                      v-for="(item, index) in currentSubtitlesTimeline"
+                      :key="index"
+                      clickable
+                      @click="setCurrentTimeMs(item.time - subtitlesDelay)"
+                      :style="{
+                        backgroundColor:
+                          currentTime + subtitlesDelay / 1000 >= item.time / 1000 &&
+                          (!currentSubtitlesTimeline[index + 1] ||
+                            currentTime + subtitlesDelay / 1000 < currentSubtitlesTimeline[index + 1].time / 1000)
+                            ? '#5ac5'
+                            : 'transparent',
+                      }"
+                    >
+                      <div ref="anchor-point-ref" style="width: 0; height: 100%;"></div>
+                      <q-item-section>
+                        <q-item-label caption
+                          >{{ formatSeconds(Math.floor(item.time / 1000))
+                          }}{{
+                            subtitlesDelay === 0
+                              ? ''
+                              : ` (${subtitlesDelay > 0 ? '-' : '+'}${Math.abs(
+                                  subtitlesDelay / 1000
+                                )}s = ${formatSeconds(Math.floor(item.time / 1000 - subtitlesDelay / 1000))})`
+                          }}</q-item-label
                         >
-                      </q-item>
-                    </q-list>
-                  </q-card-section>
-                </q-card>
-              </q-layout>
-            </q-dialog>
+                        <q-item-label>{{ item.text }}</q-item-label></q-item-section
+                      >
+                    </q-item>
+                  </q-list>
+                </q-card-section>
+              </q-card>
+            </q-layout>
+          </q-dialog>
 
-            <q-btn
-              flat
-              dense
-              size="md"
-              color="white"
-              style="height: 35px; width: 40px"
-              text-color="dark"
-              icon="more_vert"
-            >
-              <q-menu anchor="bottom right" self="top right">
-                <q-item clickable v-ripple @click="hideSeekButton = !hideSeekButton">
-                  <q-item-section avatar>
-                    <q-icon :name="hideSeekButton ? 'done' : ''" />
-                  </q-item-section>
+          <q-btn
+            flat
+            dense
+            size="md"
+            color="white"
+            style="height: 35px; width: 40px"
+            text-color="dark"
+            icon="more_vert"
+          >
+            <q-menu anchor="bottom right" self="top right">
+              <q-item clickable v-ripple @click="hideSeekButton = !hideSeekButton">
+                <q-item-section avatar>
+                  <q-icon :name="hideSeekButton ? 'done' : ''" />
+                </q-item-section>
 
-                  <q-item-section>
-                    隐藏封面按钮
-                  </q-item-section>
-                </q-item>
+                <q-item-section>
+                  隐藏封面按钮
+                </q-item-section>
+              </q-item>
 
-                <q-item clickable v-ripple @click="swapSeekButton = !swapSeekButton">
-                  <q-item-section avatar>
-                    <q-icon :name="swapSeekButton ? 'done' : ''" />
-                  </q-item-section>
-                  <q-item-section>
-                    交换进度按钮与切换按钮
-                  </q-item-section>
-                </q-item>
+              <q-item clickable v-ripple @click="swapSeekButton = !swapSeekButton">
+                <q-item-section avatar>
+                  <q-icon :name="swapSeekButton ? 'done' : ''" />
+                </q-item-section>
+                <q-item-section>
+                  交换进度按钮与切换按钮
+                </q-item-section>
+              </q-item>
 
-                <q-item clickable v-ripple @click="openWorkDetail()" v-close-popup>
-                  <q-item-section avatar>
-                    <!-- placeholder -->
-                  </q-item-section>
-                  <q-item-section>
-                    打开作品详情
-                  </q-item-section>
-                </q-item>
-              </q-menu>
-            </q-btn>
-          </div>
-        </q-card>
+              <q-item clickable v-ripple @click="openWorkDetail()" v-close-popup>
+                <q-item-section avatar>
+                  <!-- placeholder -->
+                </q-item-section>
+                <q-item-section>
+                  打开作品详情
+                </q-item-section>
+              </q-item>
+            </q-menu>
+          </q-btn>
+        </div>
       </q-card>
-    </q-slide-transition>
+    </q-card>
 
     <!-- 当前播放列表 -->
     <q-dialog v-model="showCurrentPlayList">
@@ -371,6 +373,10 @@ export default {
 
   data() {
     return {
+      // 播放器卡片状态
+      showPlayerCard: false, // 实际是否显示播放器卡片
+      playerCardTransform: '',
+
       showCurrentPlayList: false,
       editCurrentPlayList: false,
       queueCopy: [],
@@ -393,6 +399,21 @@ export default {
   },
 
   watch: {
+    isShowPlayerCardImmediate(v) {
+      if (v) {
+        this.showPlayerCard = v;
+      }
+      this.playerCardTransform = v ? 'translateY(100%)' : 'translateY(0)';
+
+      requestAnimationFrame(() => {
+        this.playerCardTransform = !v ? 'translateY(100%)' : 'translateY(0)';
+      });
+
+      setTimeout(() => {
+        this.showPlayerCard = v;
+      }, 300);
+    },
+
     queue(val) {
       this.queueCopy = val.concat();
       // 在删除最后一个 track 时关闭当前播放列表
@@ -451,6 +472,14 @@ export default {
   },
 
   computed: {
+    /**
+     * 立刻响应的是否显示播放器卡片
+     * - 是否应该显示播放器卡片
+     */
+    isShowPlayerCardImmediate() {
+      return this.currentPlayingFile.hash && !this.hide;
+    },
+
     coverUrl() {
       // 从 LocalStorage 中读取 token
       const token = this.$q.localStorage.getItem('jwt-token') || '';
@@ -666,6 +695,7 @@ export default {
     width: 100%;
     height: 100%;
   }
+  user-select: none;
 }
 
 .albumart {
