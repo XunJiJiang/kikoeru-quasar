@@ -143,6 +143,14 @@ export default {
               </svg>`;
         }
       }
+
+      if (this.videoDom) {
+        if (newVal) {
+          this.videoDom.play();
+        } else {
+          this.videoDom.pause();
+        }
+      }
     },
     currentLyric(newVal) {
       if (this.pipWindow && this.pipWindow.document) {
