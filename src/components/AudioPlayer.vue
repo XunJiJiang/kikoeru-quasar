@@ -2,20 +2,27 @@
   <div class="audio-player-container">
     <!-- 播放器 -->
     <q-card
+      ref="audio-player-card"
       square
       v-show="showPlayerCard"
       class="fixed-bottom-right bg-white text-black audio-player relative"
       :style="{
         transform: playerCardTransform,
-        transition: 'all 0.3s ease',
+        transition: playerCardTransition,
       }"
       @mousewheel.prevent
       @touchmove.prevent
     >
       <!-- 音声封面 -->
-      <div class="bg-dark row items-center albumart">
+      <div
+        class="bg-dark row items-center albumart"
+        @mousedown="startDragPlayerImg"
+        @touchstart="startDragPlayerImg"
+        @touchmove="draggingPlayerImg"
+        @touchend="endDragPlayerImg"
+      >
         <custom-img contain transition="fade" :src="coverUrl" :ratio="4 / 3" />
-        <div @click="toggleHide()" class="absolute albumart-close"></div>
+        <div class="absolute albumart-close"></div>
       </div>
 
       <q-card class="options-container" style="background-color: #fff8; backdrop-filter: blur(15px);">
@@ -376,6 +383,12 @@ export default {
       // 播放器卡片状态
       showPlayerCard: false, // 实际是否显示播放器卡片
       playerCardTransform: '',
+      playerCardTransition: 'all 0.3s ease',
+
+      isDraggingPlayerImg: false, // 是否正在拖动播放器图片
+      currentDragDistance: 0, // 当前拖动距离
+      currentDragSpeed: 0, // 当前拖动速度
+      initialDragCardHeight: 0, // 开始拖动时卡片高度
 
       showCurrentPlayList: false,
       editCurrentPlayList: false,
@@ -396,6 +409,8 @@ export default {
     if (this.$q.localStorage.has('swapSeekButton')) {
       this.swapSeekButton = this.$q.localStorage.getItem('swapSeekButton');
     }
+    window.addEventListener('mousemove', this.draggingPlayerImg);
+    window.addEventListener('mouseup', this.endDragPlayerImg);
   },
 
   watch: {
@@ -404,6 +419,7 @@ export default {
         this.showPlayerCard = v;
       }
       this.playerCardTransform = v ? 'translateY(100%)' : 'translateY(0)';
+      this.playerCardTransition = 'all 0.3s ease';
 
       requestAnimationFrame(() => {
         this.playerCardTransform = !v ? 'translateY(100%)' : 'translateY(0)';
@@ -587,6 +603,43 @@ export default {
     }),
     ...mapMutations('AudioPlayer', ['SET_TRACK', 'SET_QUEUE', 'REMOVE_FROM_QUEUE', 'EMPTY_QUEUE', 'SET_VOLUME']),
 
+    /**
+     * 开始拖动播放器图片
+     */
+    startDragPlayerImg() {
+      this.isDraggingPlayerImg = true;
+      this.playerCardTransition = 'none';
+      this.currentDragDistance = 0;
+      this.initialDragCardHeight = this.$refs['audio-player-card'].clientHeight;
+    },
+    /**
+     * 正在拖动播放器图片
+     */
+    draggingPlayerImg(e) {
+      if (!this.isDraggingPlayerImg) {
+        return;
+      }
+      this.currentDragDistance += e.movementY;
+      this.currentDragSpeed = e.movementY;
+      this.playerCardTransform = `translateY(${this.currentDragDistance >= 0 ? this.currentDragDistance : 0}px)`;
+    },
+    /**
+     * 结束拖动播放器图片
+     */
+    endDragPlayerImg() {
+      if (!this.isDraggingPlayerImg) {
+        return;
+      }
+
+      this.isDraggingPlayerImg = false;
+      this.playerCardTransition = 'all 0.3s ease';
+      this.playerCardTransform = '';
+
+      if (this.currentDragSpeed >= 0) {
+        this.toggleHide();
+      }
+    },
+
     /** 为了确保视频画中画窗口打开事件同步触发 */
     _switchPictureInPicture() {
       this.switchPictureInPicture();
@@ -719,7 +772,7 @@ export default {
   }
 
   & .albumart-close {
-    width: 180px;
+    width: 100%;
     height: 24px;
     overflow: hidden;
     left: 50%;
