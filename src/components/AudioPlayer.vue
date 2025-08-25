@@ -14,13 +14,7 @@
       @touchmove.prevent
     >
       <!-- 音声封面 -->
-      <div
-        class="bg-dark row items-center albumart"
-        @mousedown="startDragPlayerImg"
-        @touchstart="startDragPlayerImg"
-        @touchmove="draggingPlayerImg"
-        @touchend="endDragPlayerImg"
-      >
+      <div class="bg-dark row items-center albumart" @mousedown="startDragPlayerImg" @touchstart="startDragPlayerImg">
         <custom-img contain transition="fade" :src="coverUrl" :ratio="4 / 3" />
         <div class="absolute albumart-close"></div>
       </div>
@@ -34,8 +28,6 @@
           class="text-center non-selectable audio-player-title"
           @mousedown="startDragPlayerImg"
           @touchstart="startDragPlayerImg"
-          @touchmove="draggingPlayerImg"
-          @touchend="endDragPlayerImg"
         >
           <q-item-section>
             <q-item-label lines="2" class="text-bold">{{ currentPlayingFile.title }}</q-item-label>
@@ -396,6 +388,7 @@ export default {
       currentDragDistance: 0, // 当前拖动距离
       currentDragSpeed: 0, // 当前拖动速度
       initialDragCardHeight: 0, // 开始拖动时卡片高度
+      initialTouchClientY: 0,
 
       showCurrentPlayList: false,
       editCurrentPlayList: false,
@@ -418,6 +411,8 @@ export default {
     }
     window.addEventListener('mousemove', this.draggingPlayerImg);
     window.addEventListener('mouseup', this.endDragPlayerImg);
+    window.addEventListener('touchmove', this.draggingPlayerImg);
+    window.addEventListener('touchend', this.endDragPlayerImg);
   },
 
   watch: {
@@ -613,10 +608,26 @@ export default {
     /**
      * 开始拖动播放器图片
      */
-    startDragPlayerImg() {
+    startDragPlayerImg(e) {
+      if (
+        (e.type.startsWith('touch') && !(window.ontouchstart !== undefined)) ||
+        (e.type.startsWith('mouse') && window.ontouchstart !== undefined)
+      ) {
+        return;
+      }
+
+      if (e.type.startsWith('touch') && e.touches.length > 1) {
+        return;
+      }
+
+      if (e.type.startsWith('touch')) {
+        this.initialTouchClientY = e.touches[0].clientY;
+      }
+
       this.isDraggingPlayerImg = true;
       this.playerCardTransition = 'none';
       this.currentDragDistance = 0;
+      this.currentDragSpeed = 0;
       this.initialDragCardHeight = this.$refs['audio-player-card'].clientHeight;
     },
     /**
@@ -626,9 +637,16 @@ export default {
       if (!this.isDraggingPlayerImg) {
         return;
       }
-      this.currentDragDistance += e.movementY;
-      this.currentDragSpeed = e.movementY;
-      this.playerCardTransform = `translateY(${this.currentDragDistance >= 0 ? this.currentDragDistance : 0}px)`;
+
+      if (e.type.startsWith('touch')) {
+        this.currentDragSpeed = e.touches[0].clientY - this.initialTouchClientY - this.currentDragDistance;
+        this.currentDragDistance = e.touches[0].clientY - this.initialTouchClientY;
+        this.playerCardTransform = `translateY(${this.currentDragDistance >= 0 ? this.currentDragDistance : 0}px)`;
+      } else {
+        this.currentDragSpeed = e.movementY;
+        this.currentDragDistance += e.movementY;
+        this.playerCardTransform = `translateY(${this.currentDragDistance >= 0 ? this.currentDragDistance : 0}px)`;
+      }
     },
     /**
      * 结束拖动播放器图片
