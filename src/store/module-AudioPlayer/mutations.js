@@ -165,9 +165,28 @@ const mutations = {
     state.currentSubtitlesTimeline = timeline;
   },
 
-  /** 由 LyricsBar 组件调用的, 提供在需要呼出画中画窗口时调用的函数 */
+  /**
+   * 由 LyricsBar 组件调用的, 提供在需要呼出画中画窗口时调用的函数
+   * @param {Function} func
+   */
   SET_OPEN_PICTURE_IN_PICTURE: (state, func) => {
     state.openPictureInPicture = func;
+  },
+
+  /**
+   * 设置字幕播放时差
+   * @param {number} delay - 单位: 毫秒
+   */
+  SET_SUBTITLES_DELAY: (state, delay) => {
+    state.subtitlesDelay = delay;
+  },
+
+  /**
+   * 调整字幕播放时差
+   * @param {number} delta - 单位: 毫秒
+   */
+  ADJUST_SUBTITLES_DELAY: (state, delta) => {
+    state.subtitlesDelay += delta;
   },
 };
 

@@ -42,6 +42,7 @@ export default {
 
   computed: {
     ...mapState('AudioPlayer', [
+      'queue',
       'playing',
       'currentTime',
       'currentLyric',
@@ -98,6 +99,13 @@ export default {
   },
 
   watch: {
+    queue(v, ov) {
+      // 当队列变化时，字幕播放时差归 0
+      if (v.length !== ov.length || v.some(({ hash }, idx) => ov[idx].hash !== hash)) {
+        this.setSubtitlesDelay(0);
+      }
+    },
+
     /** 监视 hasPictureInPicture */
     async hasPictureInPicture(newVal) {
       if (window.documentPictureInPicture) {
@@ -269,6 +277,7 @@ export default {
       togglePlaying: 'TOGGLE_PLAYING',
       switchPictureInPicture: 'TOGGLE_PICTURE_IN_PICTURE',
       setOpenPictureInPicture: 'SET_OPEN_PICTURE_IN_PICTURE',
+      setSubtitlesDelay: 'SET_SUBTITLES_DELAY',
     }),
 
     /**

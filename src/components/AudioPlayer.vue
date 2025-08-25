@@ -155,7 +155,11 @@
               class="col-auto"
             />
 
-            <q-dialog v-model="visibleSubtitlesSelectBar" @show="onShowSubtitlesSelectBar">
+            <q-dialog
+              v-model="visibleSubtitlesSelectBar"
+              @show="onShowSubtitlesSelectBar"
+              class="subtitles-select-dialog"
+            >
               <q-layout container style="background-color: #fff;">
                 <q-header class="bg-white">
                   <q-bar>
@@ -172,29 +176,55 @@
                     <q-btn dense flat icon="close" v-close-popup />
                   </q-bar>
                 </q-header>
-                <q-footer style="height: 30px;">
-                  <div>Footer</div>
+                <q-footer style="height: 30px; background-color: transparent;" class="subtitles-dialog-footer">
+                  <q-bar style="display: flex; justify-content: flex-end; gap: 8px; color: #444;">
+                    <q-btn dense flat @click="setSubtitlesDelay(0)">重置</q-btn>
+                    <q-btn dense flat @click="adjustSubtitlesDelay(-1000)">-1.0s</q-btn>
+                    <q-btn dense flat @click="adjustSubtitlesDelay(-300)">-0.3s</q-btn>
+                    <q-input
+                      dense
+                      filled
+                      size="sm"
+                      style="text-align: center; width: 60px; font-size: 12px;"
+                      :value="subtitlesDelay / 1000"
+                      type="number"
+                      @input="setSubtitlesDelay(Number($event) * 1000)"
+                      :step="0.1"
+                      color="#444"
+                    />
+                    <q-btn dense flat @click="adjustSubtitlesDelay(300)">+0.3s</q-btn>
+                    <q-btn dense flat @click="adjustSubtitlesDelay(1000)">+1.0s</q-btn>
+                  </q-bar>
                 </q-footer>
-                <q-card style="margin: 30px 0; border-radius: 0;">
+                <q-card style="margin: 30px 0; border-radius: 0; box-shadow: none;">
                   <q-card-section style="max-height: calc(100vh - 48px - 60px); padding: 0;" class="scroll">
                     <q-list>
                       <q-item
                         v-for="(item, index) in currentSubtitlesTimeline"
                         :key="index"
                         clickable
-                        @click="setCurrentTimeMs(item.time)"
+                        @click="setCurrentTimeMs(item.time - subtitlesDelay)"
                         :style="{
                           backgroundColor:
-                            currentTime >= item.time / 1000 &&
+                            currentTime + subtitlesDelay / 1000 >= item.time / 1000 &&
                             (!currentSubtitlesTimeline[index + 1] ||
-                              currentTime < currentSubtitlesTimeline[index + 1].time / 1000)
+                              currentTime + subtitlesDelay / 1000 < currentSubtitlesTimeline[index + 1].time / 1000)
                               ? '#5ac5'
                               : 'transparent',
                         }"
                       >
                         <div ref="anchor-point-ref" style="width: 0; height: 100%;"></div>
                         <q-item-section>
-                          <q-item-label caption>{{ formatSeconds(Math.floor(item.time / 1000)) }}</q-item-label>
+                          <q-item-label caption
+                            >{{ formatSeconds(Math.floor(item.time / 1000))
+                            }}{{
+                              subtitlesDelay === 0
+                                ? ''
+                                : ` (${subtitlesDelay > 0 ? '-' : '+'}${Math.abs(
+                                    subtitlesDelay / 1000
+                                  )}s = ${formatSeconds(Math.floor(item.time / 1000 - subtitlesDelay / 1000))})`
+                            }}</q-item-label
+                          >
                           <q-item-label>{{ item.text }}</q-item-label></q-item-section
                         >
                       </q-item>
@@ -511,6 +541,7 @@ export default {
       'currentSubtitlesHash',
       'currentSubtitlesTimeline',
       'openPictureInPicture',
+      'subtitlesDelay',
     ]),
 
     ...mapGetters('AudioPlayer', ['currentPlayingFile']),
@@ -528,6 +559,8 @@ export default {
       forward: 'SET_FORWARD_SEEK_MODE',
       switchPictureInPicture: 'TOGGLE_PICTURE_IN_PICTURE',
       setCurrentSubtitlesHash: 'SET_CURRENT_SUBTITLE_HASH',
+      setSubtitlesDelay: 'SET_SUBTITLES_DELAY',
+      adjustSubtitlesDelay: 'ADJUST_SUBTITLES_DELAY',
     }),
     ...mapMutations('AudioPlayer', ['SET_TRACK', 'SET_QUEUE', 'REMOVE_FROM_QUEUE', 'EMPTY_QUEUE', 'SET_VOLUME']),
 
@@ -543,9 +576,9 @@ export default {
       const currentTime = this.currentTime;
       const currentSubtitlesIndex = this.currentSubtitlesTimeline.findIndex(
         (item, index) =>
-          currentTime >= item.time / 1000 &&
+          currentTime + this.subtitlesDelay / 1000 >= item.time / 1000 &&
           (!this.currentSubtitlesTimeline[index + 1] ||
-            currentTime < this.currentSubtitlesTimeline[index + 1].time / 1000)
+            currentTime + this.subtitlesDelay / 1000 < this.currentSubtitlesTimeline[index + 1].time / 1000)
       );
       if (currentSubtitlesIndex !== -1) {
         this.$refs['anchor-point-ref'][currentSubtitlesIndex].scrollIntoView({
@@ -679,5 +712,11 @@ export default {
   @media (max-width: $breakpoint-xs-max) {
     min-width: 267px;
   }
+}
+</style>
+
+<style lang="scss">
+footer.subtitles-dialog-footer .q-field--dense .q-field__control {
+  height: 24px !important;
 }
 </style>

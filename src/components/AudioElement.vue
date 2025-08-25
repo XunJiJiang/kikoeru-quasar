@@ -72,6 +72,7 @@ export default {
       'forwardSeekMode',
       'currentSubtitlesFile',
       'currentSubtitlesHash',
+      'subtitlesDelay',
     ]),
 
     ...mapGetters('AudioPlayer', ['currentPlayingFile']),
@@ -126,6 +127,14 @@ export default {
       if (hash && hash !== oldHash) {
         console.log('当前字幕文件哈希:', hash);
         this.loadLrcFile(hash);
+      }
+    },
+
+    subtitlesDelay(delay) {
+      // 字幕播放时差变化时, 重启 lrc 播放器
+      if (this.lrcAvailable && this.lrcObj && this.playing) {
+        this.lrcObj.pause();
+        this.lrcObj.play(this.player.currentTime * 1000 + delay);
       }
     },
   },
@@ -206,7 +215,7 @@ export default {
       }
 
       if (this.lrcAvailable && this.subtitleType === 'vtt' && this.vttCues.length > 0) {
-        const t = this.player.currentTime;
+        const t = this.player.currentTime + this.subtitlesDelay / 1000;
         const cue = this.vttCues.find(c => t >= c.start && t <= c.end);
         if (cue) {
           this.SET_CURRENT_LYRIC(cue.text);
@@ -255,7 +264,7 @@ export default {
     onSeeked() {
       if (this.lrcAvailable && this.lrcObj && this.playing) {
         this.lrcObj.pause();
-        this.lrcObj.play(this.player.currentTime * 1000);
+        this.lrcObj.play(this.player.currentTime * 1000 + this.subtitlesDelay);
       }
     },
 
@@ -263,7 +272,7 @@ export default {
       if (!this.lrcAvailable) return;
       if (this.subtitleType === 'lrc') {
         if (playStatus) {
-          this.lrcObj.play(this.player.currentTime * 1000);
+          this.lrcObj.play(this.player.currentTime * 1000 + this.subtitlesDelay);
         } else {
           this.lrcObj.pause();
         }
@@ -315,7 +324,7 @@ export default {
           this.SET_CURRENT_SUBTITLE_HASH(hash);
           this.lrcObj.setLyric(text);
           this.SET_CURRENT_SUBTITLE_TIMELINE(this.lrcObj.lines);
-          this.lrcObj.play(this.player.currentTime * 1000);
+          this.lrcObj.play(this.player.currentTime * 1000 + this.subtitlesDelay);
         } else {
           // 未知格式
           console.warn('未知字幕格式', text.slice(0, 100));

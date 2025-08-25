@@ -21,6 +21,7 @@ export default function() {
     muted: false,
     volume: 0, // 音量 (0.0-1.0)
     currentLyric: '',
+    subtitlesDelay: 0, // 字幕播放时差
     sleepTime: null,
     sleepMode: false,
     rewindSeekTime: 5,
