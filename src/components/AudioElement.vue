@@ -143,7 +143,6 @@ export default {
      * 当播放器真正开始播放时会触发本事件
      */
     onPlaying() {
-      // console.log('playing')
       this.playLrc(true);
       this.PLAY();
     },
@@ -254,12 +253,10 @@ export default {
     },
 
     onSeeked() {
-      // if (this.lrcAvailable) {
-      //   this.lrcObj.play(this.player.currentTime * 1000);
-      //   if (!this.playing) {
-      //     this.lrcObj.pause();
-      //   }
-      // }
+      if (this.lrcAvailable && this.lrcObj && this.playing) {
+        this.lrcObj.pause();
+        this.lrcObj.play(this.player.currentTime * 1000);
+      }
     },
 
     playLrc(playStatus) {
