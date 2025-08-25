@@ -356,6 +356,7 @@ export default {
 .moveable-line {
   background-color: transparent !important;
 }
+
 #lyricsBar {
   background-color: rgba($grey-4, $alpha: 0.6);
   min-width: 1vw;

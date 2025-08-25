@@ -134,7 +134,7 @@
       </q-page-scroller>
     </q-page-container>
 
-    <q-footer class="q-pa-none">
+    <q-footer class="q-pa-none" style="z-index: 3001">
       <LyricsBar />
       <PlayerBar />
     </q-footer>
