@@ -5,7 +5,7 @@
       ref="audio-player-card"
       square
       v-show="showPlayerCard"
-      class="fixed-bottom-right bg-white text-black audio-player relative"
+      class="fixed-bottom-right text-black audio-player relative"
       :style="{
         transform: playerCardTransform,
         transition: playerCardTransition,
@@ -764,16 +764,20 @@ export default {
   // 宽度 > $breakpoint-sm-min
   @media (min-width: $breakpoint-sm-min) {
     width: 330px;
-    max-height: calc(100vh - 20px);
+    max-height: calc(100vh - 28px);
     margin: 0px 10px 10px 0px;
-    height: 100%;
+    height: calc(267px + 247.5px);
   }
   // 宽度 < $breakpoint-xs-max (599px)
   @media (max-width: $breakpoint-xs-max) {
     width: 100%;
     height: 100%;
   }
+  background-color: transparent;
+  pointer-events: none;
   user-select: none;
+  box-shadow: 0 6px 16px -4px rgba(0, 0, 0, 0.18), 6px 0 16px -4px rgba(0, 0, 0, 0.12),
+    -6px 0 16px -4px rgba(0, 0, 0, 0.12);
 }
 
 .albumart {
@@ -790,6 +794,8 @@ export default {
     width: 100%;
     height: calc(100% - 267px);
   }
+
+  pointer-events: initial;
 
   cursor: grab;
   &:active {
@@ -832,6 +838,8 @@ export default {
 }
 
 .options-container {
+  pointer-events: initial;
+
   @media (min-width: $breakpoint-sm-min) {
     position: absolute;
     bottom: 0;
