@@ -333,7 +333,9 @@ export default {
         this.$axios
           .get(url)
           .then(response => {
-            const name = response.data.name;
+            const name = response.data.reduce((acc, item) => {
+              return `${acc}${acc !== '' ? '+' : ''}${item.name || ''}`;
+            }, '');
             let pageTitle;
 
             switch (restrict) {
