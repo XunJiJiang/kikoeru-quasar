@@ -73,6 +73,8 @@ export default {
       'currentSubtitlesFile',
       'currentSubtitlesHash',
       'subtitlesDelay',
+      'isTriggerSeek',
+      'seekDuration',
     ]),
 
     ...mapGetters('AudioPlayer', ['currentPlayingFile']),
@@ -137,6 +139,14 @@ export default {
         this.lrcObj.play(this.player.currentTime * 1000 + delay);
       }
     },
+
+    isTriggerSeek(value) {
+      if (value) {
+        this.setCurrentTimeMs(this.player.currentTime * 1000 + this.seekDuration);
+        this.SET_IS_TRIGGER_SEEK(false);
+        this.SET_SEEK_DURATION(0);
+      }
+    },
   },
 
   methods: {
@@ -178,6 +188,8 @@ export default {
       'SET_CURRENT_SUBTITLE_FILE',
       'SET_CURRENT_SUBTITLE_HASH',
       'SET_CURRENT_SUBTITLE_TIMELINE',
+      'SET_IS_TRIGGER_SEEK',
+      'SET_SEEK_DURATION',
     ]),
 
     onCanplay() {
@@ -416,6 +428,7 @@ export default {
     setCurrentTimeMs(ms) {
       if (this.player && typeof ms === 'number' && !isNaN(ms)) {
         this.player.currentTime = ms / 1000;
+        this.SET_CURRENT_TIME(this.player.currentTime);
       }
     },
   },

@@ -188,6 +188,22 @@ const mutations = {
   ADJUST_SUBTITLES_DELAY: (state, delta) => {
     state.subtitlesDelay += delta;
   },
+
+  /**
+   * 设置是否触发调整播放进度
+   * @param {boolean} value
+   */
+  SET_IS_TRIGGER_SEEK: (state, value) => {
+    state.isTriggerSeek = value;
+  },
+
+  /**
+   * 设置进度调整时常
+   * @param {number} value - 单位: 毫秒
+   */
+  SET_SEEK_DURATION: (state, value) => {
+    state.seekDuration = value;
+  },
 };
 
 let switchPictureInPictureTimer = null;

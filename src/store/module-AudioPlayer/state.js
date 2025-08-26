@@ -43,5 +43,10 @@ export default function() {
 
     /** 由 LyricsBar 组件提供的, 在需要呼出画中画窗口时调用的函数 */
     openPictureInPicture: () => {},
+
+    /** 是否触发调整播放进度 */
+    isTriggerSeek: false,
+    /** 进度调整时常 ms */
+    seekDuration: 0,
   };
 }
