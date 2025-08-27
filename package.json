@@ -1,16 +1,12 @@
 {
   "name": "kikoeru-quasar",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "A self-hosted web media player for listening to your DLsite voice works.",
   "homepage": "https://github.com/XunJiJiang/kikoeru-quasar",
   "productName": "Kikoeru",
   "cordovaId": "org.cordova.quasar.kikoeru",
   "capacitorId": "",
   "author": "Watanuki-Kimihiro",
-  "contributors": [
-    "yodhcn",
-    "umonaca <mw2010a@gmail.com>"
-  ],
   "repository": {
     "type": "git",
     "url": "git@github.com:XunJiJiang/kikoeru-quasar.git"
@@ -42,7 +38,7 @@
     "eslint-plugin-vue": "^7.9.0"
   },
   "engines": {
-    "node": ">= 10.18.1",
+    "node": ">= 10.18.1 <=14.x",
     "npm": ">= 6.13.4",
     "yarn": ">= 1.21.1"
   },
