@@ -4,7 +4,14 @@ A self-hosted web media player for listening to your DLsite voice works.
 
 [![unstable build status](https://github.com/umonaca/kikoeru-quasar/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/umonaca/kikoeru-quasar/actions)
 
+## 相关项目
+
+- 后端：[kikoeru-express](https://github.com/XunJiJiang/kikoeru-express)
+- 桌面应用：[kikoeru-tauri](https://github.com/XunJiJiang/kikoeru-tauri)
+
 ## Install the dependencies
+
+> 建议 Node 版本 12 至 14。
 
 ```bash
 npm install
