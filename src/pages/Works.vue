@@ -65,8 +65,8 @@
             color="white"
             text-color="primary"
             :options="[
-              { icon: 'zoom_in', value: true },
-              { icon: 'zoom_out', value: false },
+              { icon: 'list_alt', value: true },
+              { icon: 'view_module', value: false },
             ]"
             style="width: 85px;"
             class="col-auto"
