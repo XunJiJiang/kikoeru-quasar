@@ -60,7 +60,6 @@
             dense
             spread
             rounded
-            :disable="$q.screen.width < 1120"
             v-model="detailMode"
             toggle-color="primary"
             color="white"
