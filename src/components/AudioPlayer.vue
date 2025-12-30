@@ -1,3 +1,5 @@
+<!-- 播放器 -->
+
 <template>
   <div class="audio-player-container">
     <!-- 播放器 -->
@@ -23,6 +25,7 @@
         <!-- Place holder for iOS -->
         <div style="height: 5px" v-if="$q.platform.is.ios" />
 
+        <!-- 标题和副标题 -->
         <q-item
           style="height: 55px; padding: 8px 15px 0 15px;"
           class="text-center non-selectable audio-player-title"
@@ -38,7 +41,7 @@
         <!-- Place holder for iOS -->
         <div style="height: 10px" v-if="$q.platform.is.ios" />
 
-        <!-- 进度条控件 -->
+        <!-- 进度条 -->
         <div class="column items-center q-mx-sm q-my-sm" style="height: 45px;">
           <div style="width: 100%;">
             <AudioElement ref="audio-element" class="col" />
@@ -49,8 +52,8 @@
           </div>
         </div>
 
-        <!-- 播放按钮控件 -->
         <div class="row justify-around" style="height: 55px;">
+          <!-- 上一首或倒退指定秒 -->
           <q-btn
             flat
             dense
@@ -60,6 +63,7 @@
             style="width: 45px"
             class="col-auto"
           />
+          <!-- 倒退指定秒或上一首 -->
           <q-btn
             v-if="!hideSeekButton"
             flat
@@ -71,6 +75,7 @@
             @click="swapSeekButton ? previousTrack() : rewind(true)"
             :icon="swapSeekButton ? 'skip_previous' : rewindIcon"
           />
+          <!-- 播放/暂停 -->
           <q-btn
             flat
             dense
@@ -80,6 +85,7 @@
             style="width: 55px"
             class="col-auto"
           />
+          <!-- 下一首或快进指定秒 -->
           <q-btn
             v-if="!hideSeekButton"
             flat
@@ -91,6 +97,7 @@
             @click="swapSeekButton ? nextTrack() : forward(true)"
             :icon="swapSeekButton ? 'skip_next' : forwardIcon"
           />
+          <!-- 快进指定秒或下一首 -->
           <q-btn
             flat
             dense
@@ -102,7 +109,7 @@
           />
         </div>
 
-        <!-- 音量控件 -->
+        <!-- 音量 -->
         <!-- HTML5 volume in iOS is read-only -->
         <div class="row items-center q-mx-lg" style="height: 50px;" v-if="!$q.platform.is.ios">
           <q-icon name="volume_down" size="sm" class="col-auto" />
@@ -120,6 +127,7 @@
         </div>
 
         <div class="row justify-center" style="height: 45px; gap: 5px;">
+          <!-- 播放列表 -->
           <q-btn
             flat
             dense
@@ -129,6 +137,7 @@
             style="height: 35px; width: 40px"
             class="col-auto"
           />
+          <!-- 播放模式(列表播完暂停、循环、单曲、随机) -->
           <q-btn
             flat
             dense
@@ -138,6 +147,7 @@
             style="height: 35px; width: 40px"
             class="col-auto"
           />
+          <!-- 画中画 -->
           <q-btn
             flat
             dense
@@ -148,6 +158,7 @@
             style="height: 35px; width: 40px"
             class="col-auto"
           />
+          <!-- 字幕选择 -->
           <q-btn
             flat
             dense
@@ -157,7 +168,7 @@
             style="height: 35px; width: 40px"
             class="col-auto"
           />
-
+          <!-- 字幕选择对话框 -->
           <q-dialog
             v-model="visibleSubtitlesSelectBar"
             @show="onShowSubtitlesSelectBar"
@@ -236,7 +247,7 @@
               </q-card>
             </q-layout>
           </q-dialog>
-
+          <!-- 更多选项 -->
           <q-btn
             flat
             dense
@@ -752,7 +763,6 @@ export default {
     setCurrentTimeMs(ms) {
       if (this.$refs['audio-element']) {
         this.$refs['audio-element'].setCurrentTimeMs(ms);
-        this.visibleSubtitlesSelectBar = false;
       }
     },
   },
