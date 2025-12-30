@@ -160,6 +160,7 @@
           />
           <!-- 字幕选择 -->
           <q-btn
+            :disabled="currentAllSubtitlesFiles.length === 0"
             flat
             dense
             size="md"
